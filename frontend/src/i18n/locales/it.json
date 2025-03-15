@@ -1,0 +1,67 @@
+{
+    "header": {
+      "home": "Home",
+      "destinations": "Destinazioni",
+      "experiences": "Esperienze",
+      "rewards": "Premi",
+      "signin": "Accedi",
+      "signup": "Registrati",
+      "searchPlaceholder": "Dove vorresti andare?"
+    },
+    "hero": {
+      "welcome": "Benvenuto a Smart Travel",
+      "description": "Scopri tutte le meraviglie del territorio, dalle destinazioni più conosciute ai tesori più nascosti. Lasciati guidare dai consigli dei locali, dalle guide interattive e dai suggerimenti personalizzati dedicati a te per un viaggio indimenticabile e coinvolgente.",
+      "exploreNow": "Esplora Ora"
+    },
+    "features": {
+      "title": "Smart Travel con Consigli Locali",
+      "subtitle": "Naviga senza sforzo con mappe intelligenti altamente intuitive, suggerimenti personalizzati in tempo reale e approfondimenti di viaggio basati su AI.",
+      "smartTravel": {
+        "title": "Smart Travel",
+        "description": "Viaggia senza sforzo con mappe intelligenti e intuitive sempre a portata di mano. Personalizza il tuo viaggio in base alle tue esigenze e desideri con filtri di ricerca e funzionalità di personalizzazione che ti permettono di trovare le esperienze, i luoghi e le sedi che ti si addicono meglio."
+      },
+      "experiences": {
+        "title": "Prova le Nostre Esperienze",
+        "description": "Avrai accesso a sconti esclusivi, offerte speciali, benefici riservati e promozioni, sfide divertenti e giochi dedicati alla sostenibilità e alla scoperta del territorio."
+      },
+      "rewards": {
+        "title": "Sblocca Premi e Vantaggi Speciali",
+        "description": "Otterrai accesso a sconti esclusivi, offerte speciali, benefici riservati e promozioni, sfide divertenti e giochi dedicati alla sostenibilità e alla scoperta."
+      }
+    },
+    "testimonials": {
+      "title": "Cosa Dicono i Nostri Viaggiatori",
+      "subtitle": "Leggi le esperienze dei viaggiatori che hanno esplorato con le nostre guide Smart Travel.",
+      "quote": "La funzionalità di approfondimenti locali è stata incredibile! Ho scoperto posti fantastici che non avrei mai trovato da solo. Questa app ha reso il mio viaggio davvero indimenticabile."
+    },
+    "newsletter": {
+      "title": "Rimani Aggiornato",
+      "subtitle": "Iscriviti alla nostra newsletter per consigli di viaggio e offerte esclusive.",
+      "placeholder": "Il tuo indirizzo email",
+      "button": "Iscriviti"
+    },
+    "footer": {
+      "description": "Il tuo compagno di viaggio definitivo con approfondimenti locali e raccomandazioni personalizzate.",
+      "explore": "Esplora",
+      "company": "Azienda",
+      "support": "Supporto",
+      "links": {
+        "destinations": "Destinazioni",
+        "experiences": "Esperienze",
+        "travelGuides": "Guide di Viaggio",
+        "localInsights": "Approfondimenti Locali",
+        "aboutUs": "Chi Siamo",
+        "careers": "Carriere",
+        "blog": "Blog",
+        "press": "Stampa",
+        "helpCenter": "Centro Assistenza",
+        "contactUs": "Contattaci",
+        "privacyPolicy": "Informativa sulla Privacy",
+        "termsOfService": "Termini di Servizio"
+      }
+    },
+    "language": {
+      "en": "Inglese",
+      "it": "Italiano"
+    }
+  }

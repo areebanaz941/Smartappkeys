@@ -1,0 +1,67 @@
+{
+  "header": {
+    "home": "Home",
+    "destinations": "Destinations",
+    "experiences": "Experiences",
+    "rewards": "Rewards",
+    "signin": "Sign In",
+    "signup": "Sign Up",
+    "searchPlaceholder": "Where would you like to go?"
+  },
+  "hero": {
+    "welcome": "Welcome to Smart Travel",
+    "description": "Discover all the wonders of the area, from the best-known destinations to the most hidden treasures. Let yourself be guided by the advice of the locals, the interactive guides and the personalised suggestions dedicated to you for an unforgettable and enthralling trip.",
+    "exploreNow": "Explore Now"
+  },
+  "features": {
+    "title": "Smart Travel with Local Insights",
+    "subtitle": "Navigate effortlessly with highly intuitive smart maps, real-time personalized suggestions, and AI-powered travel insights.",
+    "smartTravel": {
+      "title": "Smart Travel",
+      "description": "Travel effortlessly with intelligent and intuitive maps always at your fingertips. Customise your trip according to your needs and desires with search filters and customisation features that allow you to find the experiences, places and venues that suit you best."
+    },
+    "experiences": {
+      "title": "Try Our Experiences",
+      "description": "You will get access to exclusive discounts, special offers, reserved benefits and promotions, fun challenges, and games dedicated to sustainability and discovering the territory."
+    },
+    "rewards": {
+      "title": "Unlock Rewards & Special Perks",
+      "description": "You will gain access to exclusive discounts, special offers, reserved benefits and promotions, fun challenges and games dedicated to sustainability and discovery."
+    }
+  },
+  "testimonials": {
+    "title": "What Our Travelers Say",
+    "subtitle": "Read about the experiences of travelers who have explored with our Smart Travel guides.",
+    "quote": "The local insights feature was incredible! I discovered amazing places I would have never found on my own. This app made my trip truly unforgettable."
+  },
+  "newsletter": {
+    "title": "Stay Updated",
+    "subtitle": "Subscribe to our newsletter for travel tips and exclusive offers.",
+    "placeholder": "Your email address",
+    "button": "Subscribe"
+  },
+  "footer": {
+    "description": "Your ultimate travel companion with local insights and personalized recommendations.",
+    "explore": "Explore",
+    "company": "Company",
+    "support": "Support",
+    "links": {
+      "destinations": "Destinations",
+      "experiences": "Experiences",
+      "travelGuides": "Travel Guides",
+      "localInsights": "Local Insights",
+      "aboutUs": "About Us",
+      "careers": "Careers",
+      "blog": "Blog",
+      "press": "Press",
+      "helpCenter": "Help Center",
+      "contactUs": "Contact Us",
+      "privacyPolicy": "Privacy Policy",
+      "termsOfService": "Terms of Service"
+    }
+  },
+  "language": {
+    "en": "English",
+    "it": "Italian"
+  }
+}

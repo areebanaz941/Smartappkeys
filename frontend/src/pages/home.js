@@ -1,14 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Menu, X, MapPin, Star, Camera, User, XCircle } from 'lucide-react';
 import { AuthPage } from './LoginRegistrationPages'; 
 import { Link } from 'react-router-dom';
+import LanguageSelector from '../components/LanguageSelector';
+
+// Import translations
+import enTranslations from '../i18n/locales/en.json';
+import itTranslations from '../i18n/locales/it.json';
+
 const HomePage = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchInput, setSearchInput] = useState('');
+  const [translations, setTranslations] = useState(enTranslations);
   
   // Update to handle both login and registration in one modal
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState('login'); // 'login' or 'signup'
+
+  // Load saved language preference on component mount
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem('preferredLanguage');
+    if (savedLanguage === 'it') {
+      setTranslations(itTranslations);
+    }
+  }, []);
+
+  const handleLanguageChange = (language) => {
+    setTranslations(language === 'en' ? enTranslations : itTranslations);
+  };
 
   const openAuthModal = (mode = 'login') => {
     setAuthMode(mode);
@@ -23,6 +42,16 @@ const HomePage = () => {
     // If you want to pass the search query to the map page, you can do it via state
     // This is an example using the Link component instead of programmatic navigation
   };
+
+  // Destructure translations for easier access
+  const {
+    header,
+    hero,
+    features,
+    testimonials,
+    newsletter,
+    footer
+  } = translations;
 
   return (
     <div className="min-h-screen bg-white relative">
@@ -39,57 +68,50 @@ const HomePage = () => {
       )}
 
       {/* Navigation Bar */}
-      <nav className="bg-white shadow-md">
+      <nav className="bg-yellowgreen shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
               <div className="flex-shrink-0 flex items-center">
-                <span className="text-[#22c55e] font-bold text-2xl">Smart Travel</span>
+                <img 
+                  src="/San_Lorenzo_Nuovo_Smart_AppKey_Logo.png" 
+                  alt="San Lorenzo Nuovo Smart AppKey Logo" 
+                  className="h-12 w-auto mr-1" 
+                />
+                <span className="text-[#032c60] font-bold text-xl md:text-2xl">San Lorenzo Nuovo Smart AppKey</span>
               </div>
               <div className="hidden md:ml-6 md:flex md:space-x-8">
-                <a href="#" className="text-[#22c55e] border-b-2 border-[#22c55e] px-3 pt-5 pb-2 font-medium text-sm">
-                  Home
+                <a href="/home" className="text-[#032c60] border-b-2 border-[#032c60] px-3 pt-5 pb-2 font-medium text-sm">
+                  {header.home}
                 </a>
-                <a href="#" className="text-[#6b7280] hover:text-[#22c55e] px-3 pt-5 pb-2 font-medium text-sm">
-                  Destinations
+                <a href="/map" className="text-[#6b7280] hover:text-[#032c60] px-3 pt-5 pb-2 font-medium text-sm">
+                  {header.destinations}
                 </a>
-                <a href="#" className="text-[#6b7280] hover:text-[#22c55e] px-3 pt-5 pb-2 font-medium text-sm">
-                  Experiences
+                <a href="/review" className="text-[#6b7280] hover:text-[#032c60] px-3 pt-5 pb-2 font-medium text-sm">
+                  {header.experiences}
                 </a>
-                <a href="#" className="text-[#6b7280] hover:text-[#22c55e] px-3 pt-5 pb-2 font-medium text-sm">
-                  Rewards
+                <a href="/rewards" className="text-[#6b7280] hover:text-[#032c60] px-3 pt-5 pb-2 font-medium text-sm">
+                  {header.rewards}
                 </a>
               </div>
             </div>
             <div className="flex items-center">
               <div className="hidden md:flex items-center space-x-4">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search destinations..."
-                    className="w-64 pl-10 pr-4 py-2 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#22c55e]"
-                  />
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-[#6b7280]" />
-                </div>
+                {/* Language Selector */}
+                <LanguageSelector onSelectLanguage={handleLanguageChange} />
                 
-                {/* Updated to have Sign In and Sign Up buttons */}
+                {/* Sign In Button */}
                 <button 
                   onClick={() => openAuthModal('login')}
-                  className="text-[#22c55e] px-4 py-2 rounded-full text-sm font-medium hover:bg-gray-100 transition-colors"
+                  className="text-[#032c60] px-4 py-2 rounded-full text-sm font-small hover:bg-gray-100 transition-colors"
                 >
-                  Sign In
-                </button>
-                <button 
-                  onClick={() => openAuthModal('signup')}
-                  className="bg-[#22c55e] text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-[#16a34a] transition-colors"
-                >
-                  Sign Up
+                  {header.signin}
                 </button>
               </div>
               <div className="md:hidden flex items-center ml-4">
                 <button
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  className="inline-flex items-center justify-center p-2 rounded-md text-[#6b7280] hover:text-[#22c55e]"
+                  className="inline-flex items-center justify-center p-2 rounded-md text-[#6b7280] hover:text-[#032c60]"
                 >
                   {isMenuOpen ? (
                     <X className="h-6 w-6" />
@@ -106,38 +128,42 @@ const HomePage = () => {
         {isMenuOpen && (
           <div className="md:hidden">
             <div className="pt-2 pb-3 space-y-1">
-              <a href="#" className="bg-[#22c55e]/10 text-[#22c55e] block pl-3 pr-4 py-2 font-medium">
-                Home
+              <a href="#" className="bg-[#032c60]/10 text-[#032c60] block pl-3 pr-4 py-2 font-medium">
+                {header.home}
               </a>
-              <a href="#" className="text-[#6b7280] hover:bg-gray-50 block pl-3 pr-4 py-2 font-medium">
-                Destinations
+              <a href="#" className="text-[#032c60] hover:bg-gray-50 block pl-3 pr-4 py-2 font-medium">
+                {header.destinations}
               </a>
-              <a href="#" className="text-[#6b7280] hover:bg-gray-50 block pl-3 pr-4 py-2 font-medium">
-                Experiences
+              <a href="#" className="text-[#032c60] hover:bg-gray-50 block pl-3 pr-4 py-2 font-medium">
+                {header.experiences}
               </a>
-              <a href="#" className="text-[#6b7280] hover:bg-gray-50 block pl-3 pr-4 py-2 font-medium">
-                Rewards
+              <a href="#" className="text-[#032c60] hover:bg-gray-50 block pl-3 pr-4 py-2 font-medium">
+                {header.rewards}
               </a>
+              {/* Language selector for mobile */}
+              <div className="px-3 py-2">
+                <LanguageSelector onSelectLanguage={handleLanguageChange} />
+              </div>
               <div className="px-3 py-2">
                 <input
                   type="text"
-                  placeholder="Search destinations..."
+                  placeholder={header.searchPlaceholder}
                   className="w-full pl-10 pr-4 py-2 border rounded-full text-sm focus:outline-none"
                 />
-                <Search className="absolute left-6 top-[14.5rem] h-4 w-4 text-[#6b7280]" />
+                <Search className="absolute left-6 top-[16.5rem] h-4 w-4 text-[#6b7280]" />
               </div>
               <div className="px-3 py-2 space-y-2">
                 <button 
                   onClick={() => openAuthModal('login')}
-                  className="w-full bg-white border border-[#22c55e] text-[#22c55e] px-4 py-2 rounded-full text-sm font-medium hover:bg-gray-50 transition-colors"
+                  className="w-full bg-white border border-[#032c60] text-[#032c60] px-4 py-2 rounded-full text-sm font-medium hover:bg-gray-50 transition-colors"
                 >
-                  Sign In
+                  {header.signin}
                 </button>
                 <button 
                   onClick={() => openAuthModal('signup')}
-                  className="w-full bg-[#22c55e] text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-[#16a34a] transition-colors"
+                  className="w-full bg-[#032c60] text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-[#16a34a] transition-colors"
                 >
-                  Sign Up
+                  {header.signup}
                 </button>
               </div>
             </div>
@@ -147,32 +173,30 @@ const HomePage = () => {
 
       {/* Hero Section */}
       <div className="relative bg-gray-100">
-        <div className="h-96 md:h-[32rem] w-full overflow-hidden">
-          <img 
-            src="/tourism3.jpg" 
-            alt="Beautiful travel destination" 
-            className="w-full h-full object-cover opacity-70"
-          />
+        <div className="h-96 md:h-[32rem] w-full overflow-hidden bg-midnightblue">
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-gray-900 opacity-80"></div>
         </div>
         <div className="absolute inset-0 flex items-center justify-center px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-3xl md:text-5xl font-bold text-white mb-4">
-              Welcome to Smart Travel
+              {hero.welcome}
             </h1>
             <p className="text-lg md:text-xl text-gray-200 max-w-3xl mx-auto mb-8">
-              Discover iconic landmarks, hidden gems, and must-visit attractions with expertly curated local recommendations.
+              {hero.description}
             </p>
-            <div className="max-w-xl mx-auto bg-white p-4 rounded-2xl shadow-md">
+            <div className="max-w-xl mx-auto bg-yellowgreen p-4 rounded-2xl shadow-md">
               <div className="flex flex-col md:flex-row gap-4">
                 <input 
                   type="text" 
-                  placeholder="Where would you like to go?" 
-                  className="flex-grow px-4 py-3 border rounded-full focus:outline-none focus:ring-2 focus:ring-[#22c55e]"
+                  placeholder={header.searchPlaceholder}
+                  className="flex-grow px-4 py-3 border rounded-full focus:outline-none focus:ring-2 focus:ring-[#032c60]"
                 />
-                <button className="bg-[#22c55e] hover:bg-[#16a34a] text-white px-6 py-3 rounded-full font-medium transition-colors">
-                  Explore Now
-                </button>
+                <Link 
+                  to="/map" 
+                  className="bg-[#032c60] hover:bg-[#16a34a] text-white px-6 py-3 rounded-full font-medium transition-colors"
+                >
+                  {hero.exploreNow}
+                </Link>
               </div>
             </div>
           </div>
@@ -184,9 +208,9 @@ const HomePage = () => {
         {/* Section 1: Local Insights */}
         <div className="mb-16">
           <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-[#22c55e] mb-4">Smart Travel with Local Insights</h2>
+            <h2 className="text-3xl font-bold text-[#032c60] mb-4">{features.title}</h2>
             <p className="text-[#6b7280] max-w-3xl mx-auto">
-              Navigate effortlessly with highly intuitive smart maps, real-time personalized suggestions, and AI-powered travel insights.
+              {features.subtitle}
             </p>
           </div>
           
@@ -194,18 +218,18 @@ const HomePage = () => {
             <div className="bg-white rounded-2xl shadow-md overflow-hidden">
               <div className="h-48 overflow-hidden">
                 <img 
-                  src="/tourism1.jpg" 
+                  src="/board.jpeg" 
                   alt="Map features" 
                   className="w-full h-full object-cover"
                 />
               </div>
               <div className="p-6">
                 <div className="flex items-center mb-2">
-                  <MapPin className="h-5 w-5 text-[#22c55e] mr-2" />
-                  <h3 className="text-lg font-semibold text-[#22c55e]">Interactive Maps</h3>
+                  <MapPin className="h-5 w-5 text-[#032c60] mr-2" />
+                  <h3 className="text-lg font-semibold text-[#032c60]">{features.smartTravel.title}</h3>
                 </div>
                 <p className="text-[#6b7280]">
-                  Explore with detailed maps featuring hidden gems and local favorites not found on typical tourist routes.
+                  {features.smartTravel.description}
                 </p>
               </div>
             </div>
@@ -213,18 +237,18 @@ const HomePage = () => {
             <div className="bg-white rounded-2xl shadow-md overflow-hidden">
               <div className="h-48 overflow-hidden">
                 <img 
-                  src="/tourism2.jpg" 
+                  src="/sea.jpeg" 
                   alt="Personalized recommendations" 
                   className="w-full h-full object-cover"
                 />
               </div>
               <div className="p-6">
                 <div className="flex items-center mb-2">
-                  <Star className="h-5 w-5 text-[#22c55e] mr-2" />
-                  <h3 className="text-lg font-semibold text-[#22c55e]">Curated Experiences</h3>
+                  <Star className="h-5 w-5 text-[#032c60] mr-2" />
+                  <h3 className="text-lg font-semibold text-[#032c60]">{features.experiences.title}</h3>
                 </div>
                 <p className="text-[#6b7280]">
-                  Discover experiences tailored to your interests, from food tours to adventure activities.
+                  {features.experiences.description}
                 </p>
               </div>
             </div>
@@ -232,44 +256,19 @@ const HomePage = () => {
             <div className="bg-white rounded-2xl shadow-md overflow-hidden">
               <div className="h-48 overflow-hidden">
                 <img 
-                  src="/tourism4.jpg" 
+                  src="/skywater.jpeg" 
                   alt="Local guide insights" 
                   className="w-full h-full object-cover"
                 />
               </div>
               <div className="p-6">
                 <div className="flex items-center mb-2">
-                  <User className="h-5 w-5 text-[#22c55e] mr-2" />
-                  <h3 className="text-lg font-semibold text-[#22c55e]">Local Expert Guides</h3>
+                  <User className="h-5 w-5 text-[#032c60] mr-2" />
+                  <h3 className="text-lg font-semibold text-[#032c60]">{features.rewards.title}</h3>
                 </div>
                 <p className="text-[#6b7280]">
-                  Connect with knowledgeable locals who provide authentic insights into their cities and cultures.
+                  {features.rewards.description}
                 </p>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Rest of the page content remains the same */}
-        {/* Section 2: Rewards */}
-        <div className="bg-[#22c55e]/10 rounded-2xl p-8 md:p-12">
-          <div className="flex flex-col md:flex-row items-center">
-            <div className="md:w-1/2 mb-8 md:mb-0 md:pr-8">
-              <h2 className="text-3xl font-bold text-[#22c55e] mb-4">Unlock Rewards & Special Perks</h2>
-              <p className="text-[#6b7280] mb-6">
-                Gain access to exclusive discounts, special offers, VIP perks, and limited-time deals at top cafés, restaurants, and local events.
-              </p>
-              <button className="bg-[#22c55e] hover:bg-[#16a34a] text-white px-6 py-3 rounded-full font-medium transition-colors">
-                Start Exploring
-              </button>
-            </div>
-            <div className="md:w-1/2">
-              <div className="rounded-2xl overflow-hidden shadow-lg">
-                <img 
-                  src="/tourism1.jpg" 
-                  alt="People enjoying travel rewards" 
-                  className="w-full h-auto"
-                />
               </div>
             </div>
           </div>
@@ -280,9 +279,9 @@ const HomePage = () => {
       <div className="bg-gray-100 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-[#22c55e] mb-4">What Our Travelers Say</h2>
+            <h2 className="text-3xl font-bold text-[#032c60] mb-4">{testimonials.title}</h2>
             <p className="text-[#6b7280] max-w-3xl mx-auto">
-              Read about the experiences of travelers who have explored with our Smart Travel guides.
+              {testimonials.subtitle}
             </p>
           </div>
           
@@ -301,7 +300,7 @@ const HomePage = () => {
                   </div>
                 </div>
                 <p className="text-[#6b7280]">
-                  "The local insights feature was incredible! I discovered amazing places I would have never found on my own. This app made my trip truly unforgettable."
+                  {testimonials.quote}
                 </p>
               </div>
             ))}
@@ -310,23 +309,23 @@ const HomePage = () => {
       </div>
       
       {/* Newsletter Section */}
-      <div className="bg-[#22c55e] py-12">
+      <div className="bg-[#032c60] py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between">
             <div className="md:w-1/2 mb-6 md:mb-0">
-              <h2 className="text-2xl font-bold text-white mb-2">Stay Updated</h2>
+              <h2 className="text-2xl font-bold text-white mb-2">{newsletter.title}</h2>
               <p className="text-white/80">
-                Subscribe to our newsletter for travel tips and exclusive offers.
+                {newsletter.subtitle}
               </p>
             </div>
             <div className="md:w-1/2 flex">
               <input
                 type="email"
-                placeholder="Your email address"
+                placeholder={newsletter.placeholder}
                 className="flex-grow px-4 py-3 rounded-l-full focus:outline-none"
               />
-              <button className="bg-white text-[#22c55e] px-6 py-3 rounded-r-full font-medium hover:bg-gray-100 transition-colors">
-                Subscribe
+              <button className="bg-white text-[#032c60] px-6 py-3 rounded-r-full font-medium hover:bg-gray-100 transition-colors">
+                {newsletter.button}
               </button>
             </div>
           </div>
@@ -338,8 +337,8 @@ const HomePage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-xl font-bold text-[#22c55e] mb-4">Smart Travel</h3>
-              <p className="mb-4 text-[#6b7280]">Your ultimate travel companion with local insights and personalized recommendations.</p>
+              <h3 className="text-xl font-bold text-white mb-4">Smart Travel</h3>
+              <p className="mb-4 text-gray-400">{footer.description}</p>
               <div className="flex space-x-4">
                 {/* Social media icons would go here */}
                 <div className="h-8 w-8 rounded-full bg-[#1877F2]"></div>
@@ -349,32 +348,32 @@ const HomePage = () => {
             </div>
             
             <div>
-              <h4 className="text-lg font-semibold text-white mb-4">Explore</h4>
+              <h4 className="text-lg font-semibold text-white mb-4">{footer.explore}</h4>
               <ul className="space-y-2">
-                <li><a href="#" className="text-[#6b7280] hover:text-white">Destinations</a></li>
-                <li><a href="#" className="text-[#6b7280] hover:text-white">Experiences</a></li>
-                <li><a href="#" className="text-[#6b7280] hover:text-white">Travel Guides</a></li>
-                <li><a href="#" className="text-[#6b7280] hover:text-white">Local Insights</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white">{footer.links.destinations}</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white">{footer.links.experiences}</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white">{footer.links.travelGuides}</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white">{footer.links.localInsights}</a></li>
               </ul>
             </div>
             
             <div>
-              <h4 className="text-lg font-semibold text-white mb-4">Company</h4>
+              <h4 className="text-lg font-semibold text-white mb-4">{footer.company}</h4>
               <ul className="space-y-2">
-                <li><a href="#" className="text-[#6b7280] hover:text-white">About Us</a></li>
-                <li><a href="#" className="text-[#6b7280] hover:text-white">Careers</a></li>
-                <li><a href="#" className="text-[#6b7280] hover:text-white">Blog</a></li>
-                <li><a href="#" className="text-[#6b7280] hover:text-white">Press</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white">{footer.links.aboutUs}</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white">{footer.links.careers}</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white">{footer.links.blog}</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white">{footer.links.press}</a></li>
               </ul>
             </div>
             
             <div>
-              <h4 className="text-lg font-semibold text-white mb-4">Support</h4>
+              <h4 className="text-lg font-semibold text-white mb-4">{footer.support}</h4>
               <ul className="space-y-2">
-                <li><a href="#" className="text-[#6b7280] hover:text-white">Help Center</a></li>
-                <li><a href="#" className="text-[#6b7280] hover:text-white">Contact Us</a></li>
-                <li><a href="#" className="text-[#6b7280] hover:text-white">Privacy Policy</a></li>
-                <li><a href="#" className="text-[#6b7280] hover:text-white">Terms of Service</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white">{footer.links.helpCenter}</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white">{footer.links.contactUs}</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white">{footer.links.privacyPolicy}</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white">{footer.links.termsOfService}</a></li>
               </ul>
             </div>
           </div>

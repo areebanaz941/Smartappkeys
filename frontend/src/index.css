@@ -7,49 +7,242 @@
 @tailwind utilities;
 
 
-/* Map styles */
-.leaflet-container {
+/* MapComponent.css */
+
+.map-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+}
+
+.map {
   width: 100%;
   height: 100%;
 }
 
-.custom-div-icon {
-  background: transparent;
+/* Loading indicator */
+.loading-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 10px 20px;
+  border-radius: 4px;
+  z-index: 1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Error message */
+.error-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(255, 0, 0, 0.1);
+  color: #d32f2f;
+  padding: 15px 20px;
+  border-radius: 4px;
+  z-index: 1;
+  max-width: 80%;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Filter controls */
+.filter-controls {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  display: flex;
+  gap: 8px;
+  background-color: white;
+  padding: 10px;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.filter-controls button {
+  padding: 8px 12px;
+  background-color: #f0f0f0;
   border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
 }
 
-/* Custom zoom control styles */
-.leaflet-control-zoom {
-  border: none !important;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+.filter-controls button:hover {
+  background-color: #e0e0e0;
 }
 
-.leaflet-control-zoom a {
-  background-color: white !important;
-  color: #374151 !important;
-  border: none !important;
+.filter-controls button.active {
+  background-color: #4CAF50;
+  color: white;
 }
 
-.leaflet-control-zoom a:hover {
-  background-color: #f3f4f6 !important;
+/* Custom marker popup */
+.mapboxgl-popup {
+  max-width: 200px;
 }
 
-/* Custom popup styles */
-.leaflet-popup-content-wrapper {
-  border-radius: 8px;
-  padding: 8px;
+.popup-content {
+  padding: 5px;
 }
 
-.leaflet-popup-content {
+.popup-content h3 {
+  margin: 0 0 5px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.popup-content p {
   margin: 0;
+  font-size: 14px;
+  color: #666;
 }
 
-/* Fix marker z-index */
-.leaflet-marker-icon {
-  z-index: 1000 !important;
+/* Sidebar styles */
+.sidebar {
+  position: fixed;
+  top: 0;
+  right: -400px;
+  width: 380px;
+  height: 100%;
+  background-color: white;
+  z-index: 2;
+  transition: right 0.3s ease;
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
 }
 
-.leaflet-popup {
-  z-index: 1001 !important;
+.sidebar.open {
+  right: 0;
 }
 
+/* POI details inside sidebar */
+.poi-details {
+  padding: 20px;
+}
+
+.poi-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.poi-header h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+}
+
+.poi-image {
+  width: 100%;
+  height: 200px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.poi-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.poi-type {
+  font-size: 16px;
+  color: #4CAF50;
+  margin-bottom: 10px;
+}
+
+.poi-address {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  color: #666;
+}
+
+.location-icon {
+  margin-right: 8px;
+}
+
+.poi-description {
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+  padding: 15px 0;
+  margin: 15px 0;
+}
+
+.poi-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.action-button {
+  padding: 12px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.directions-button {
+  background-color: #2196F3;
+  color: white;
+}
+
+.directions-button:hover {
+  background-color: #1976D2;
+}
+
+.save-button {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.save-button:hover {
+  background-color: #e0e0e0;
+}
+
+.book-button {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.book-button:hover {
+  background-color: #388E3C;
+}
+
+.marker {
+  background-size: cover;
+  cursor: pointer;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    right: -100%;
+  }
+  
+  .filter-controls {
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 90%;
+  }
+}
