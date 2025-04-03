@@ -23,7 +23,7 @@ const POIAnalyticsPage = () => {
       setError(null);
       
       try {
-        const apiUrl = 'https://smartappkeys-1.onrender.com/api/pois';
+        const apiUrl = 'https://smartappkeys.onrender.com/api/pois';
         console.log('Fetching POIs from:', apiUrl);
         
         const response = await fetch(apiUrl);
