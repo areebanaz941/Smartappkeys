@@ -74,9 +74,9 @@ const HomePage = () => {
             <div className="flex items-center">
               <div className="flex-shrink-0 flex items-center">
                 <img 
-                  src="/San_Lorenzo_Nuovo_Smart_AppKey_Logo.png" 
+                  src="/logo.png" 
                   alt="San Lorenzo Nuovo Smart AppKey Logo" 
-                  className="h-12 w-auto mr-1" 
+                  className="h-16 w-auto mr-2" 
                 />
                 <span className="text-[#032c60] font-bold text-xl md:text-2xl">San Lorenzo Nuovo Smart AppKey</span>
               </div>
