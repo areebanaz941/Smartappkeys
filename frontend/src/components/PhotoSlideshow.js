@@ -41,7 +41,7 @@ const PhotoSlideshow = ({ photos }) => {
             return '/placeholder-image.jpg';
         }
         
-       return `https://smartappkeys-1.onrender.com/${imagePath}`;
+       return `https://smartappkeys.onrender.com/${imagePath}`;
     };
 
     const getThumbnailUrl = (photo) => {
@@ -57,7 +57,7 @@ const PhotoSlideshow = ({ photos }) => {
             return '/placeholder-image.jpg';
         }
         
-        return `https://smartappkeys-1.onrender.com/${thumbnailPath}`;
+        return `https://smartappkeys.onrender.com/${thumbnailPath}`;
     };
 
     const Slide = ({ isFullscreen }) => {
