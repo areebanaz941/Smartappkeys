@@ -73,7 +73,7 @@ const RouteUploadForm = () => {
                     imageFiles.map(async (file) => {
                         console.log('Processing file:', file.name); // Debug log
                         if (file.type === 'image/heic' || file.name.toLowerCase().endsWith('.heic')) {
-                            const response = await fetch('http://localhost:5000/api/convert-heic', {
+                            const response = await fetch('https://smartappkeys-1.onrender.com/api/convert-heic', {
                                 method: 'POST',
                                 body: file
                             });
@@ -201,7 +201,7 @@ const RouteUploadForm = () => {
             console.log(pair[0], pair[1]);
         }
 
-        const response = await axios.post('http://localhost:5000/api/routes', formDataToSend, {
+        const response = await axios.post('https://smartappkeys-1.onrender.com/api/routes', formDataToSend, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             }
