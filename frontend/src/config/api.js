@@ -1,6 +1,6 @@
 // src/config/api.js
 const API_CONFIG = {
-    BASE_URL: process.env.REACT_APP_API_URL || 'https://smartappkeys-1.onrender.com',
+    BASE_URL: process.env.REACT_APP_API_URL || 'https://smartappkeys.onrender.com',
     ENDPOINTS: {
       ROUTES: '/api/routes',
       UPLOAD: '/api/routes',
