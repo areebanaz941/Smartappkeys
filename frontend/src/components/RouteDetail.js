@@ -44,7 +44,7 @@ const RouteDetail = () => {
     const displayGPXRoute = async (gpxPath) => {
         try {
             console.log('Fetching GPX from:', gpxPath);
-            const response = await axios.get(`https://smartappkeys-1.onrender.com/${gpxPath}`);
+            const response = await axios.get(`https://smartappkeys.onrender.com/${gpxPath}`);
             const gpxContent = response.data;
             console.log('GPX content received');
 
@@ -134,7 +134,7 @@ const RouteDetail = () => {
             try {
                 setLoading(true);
                 console.log('Fetching route:', id);
-                const response = await axios.get(`https://smartappkeys-1.onrender.com/api/routes/${id}`);
+                const response = await axios.get(`https://smartappkeys.onrender.com/api/routes/${id}`);
                 console.log('Route data:', response.data);
                 setRoute(response.data);
             } catch (err) {
@@ -361,7 +361,7 @@ const RouteDetail = () => {
                         <div className="bg-white rounded-lg shadow-md p-6">
                             <button
                                 className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors duration-300"
-                                onClick={() => window.open(`https://smartappkeys-1.onrender.com/${route.gpxFile?.path}`, '_blank')}
+                                onClick={() => window.open(`https://smartappkeys.onrender.com/${route.gpxFile?.path}`, '_blank')}
                             >
                                 Download GPX
                             </button>
