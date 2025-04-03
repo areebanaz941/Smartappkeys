@@ -33,7 +33,7 @@ const BikeRouteManagement = ({ mode = "view" }) => {
       try {
         if (mode === 'edit' && id) {
           // Fetch a specific route for editing
-          const response = await fetch(`https://smartappkeys-1.onrender.com/api/bike-routes/${id}`);
+          const response = await fetch(`https://smartappkeys.onrender.com/api/bike-routes/${id}`);
           
           if (!response.ok) {
             throw new Error(`Server responded with status: ${response.status}`);
@@ -60,7 +60,7 @@ const BikeRouteManagement = ({ mode = "view" }) => {
           });
         } else if (mode === 'view' || mode === 'statistics') {
           // Fetch all routes
-          const response = await fetch('https://smartappkeys-1.onrender.com/api/bike-routes');
+          const response = await fetch('https://smartappkeys.onrender.com/api/bike-routes');
           
           if (!response.ok) {
             throw new Error(`Server responded with status: ${response.status}`);
@@ -167,8 +167,8 @@ const BikeRouteManagement = ({ mode = "view" }) => {
     
     try {
       const apiUrl = mode === 'edit' 
-        ? `https://smartappkeys-1.onrender.com/api/bike-routes/${id}` 
-        : 'https://smartappkeys-1.onrender.com/api/bike-routes';
+        ? `https://smartappkeys.onrender.com/api/bike-routes/${id}` 
+        : 'https://smartappkeys.onrender.com/api/bike-routes';
       
       const method = mode === 'edit' ? 'PUT' : 'POST';
       
@@ -205,7 +205,7 @@ const BikeRouteManagement = ({ mode = "view" }) => {
     if (!id) return;
     
     try {
-      const response = await fetch(`https://smartappkeys-1.onrender.com/api/bike-routes/${id}`, {
+      const response = await fetch(`https://smartappkeys.onrender.com/api/bike-routes/${id}`, {
         method: 'DELETE'
       });
       
