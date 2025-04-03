@@ -160,7 +160,7 @@ const GpxRouteUpload = ({ onUploadSuccess, onUploadFail, formData, setFormData }
       }, 300);
       
       // Make the upload request
-      const response = await fetch('http://localhost:5000/api/bike-routes/upload', {
+      const response = await fetch('https://smartappkeys-1.onrender.com/api/bike-routes/upload', {
         method: 'POST',
         body: formData
       });
