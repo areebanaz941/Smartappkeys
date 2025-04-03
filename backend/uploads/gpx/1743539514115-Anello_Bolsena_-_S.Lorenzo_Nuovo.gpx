@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.topografix.com/GPX/1/1" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" version="1.1" creator="http://ridewithgps.com/">
+  <metadata>
+    <name>Anello Bolsena - S.Lorenzo Nuovo</name>
+    <link href="https://ridewithgps.com/routes/37173322">
+      <text>Anello Bolsena - S.Lorenzo Nuovo</text>
+    </link>
+    <time>2021-08-16T05:01:25Z</time>
+  </metadata>
+  <rte>
+    <name>Anello Bolsena - S.Lorenzo Nuovo</name>
+    <rtept lat="42.65654" lon="11.93533">
+      <name>Start</name>
+      <cmt>Start of route</cmt>
+    </rtept>
+    <rtept lat="42.64411" lon="11.98648">
+      <name>Left</name>
+      <cmt>Gira a sinistra su Via Guglielmo Marconi, SP53</cmt>
+    </rtept>
+    <rtept lat="42.64353" lon="12.03414">
+      <name>Left</name>
+      <cmt>Gira a sinistra su Strada della Gabelletta, SP152</cmt>
+    </rtept>
+    <rtept lat="42.677549" lon="12.03248">
+      <name>Slight Left</name>
+      <cmt>Tieni la sinistra su Strada statale 74 Maremmana, SR74ter</cmt>
+    </rtept>
+    <rtept lat="42.68624" lon="11.905989">
+      <name>Left</name>
+      <cmt>Gira a sinistra su Via Cassia, SR2</cmt>
+    </rtept>
+    <rtept lat="42.65654" lon="11.93533">
+      <name>End</name>
+      <cmt>End of route</cmt>
+    </rtept>
+  </rte>
+</gpx>

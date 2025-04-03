@@ -8,6 +8,7 @@ const POIAnalyticsPage = () => {
   const [analytics, setAnalytics] = useState({
     totalPOIs: 0,
     poiByType: {},
+    poiByRelevance: {}, // New analytics for relevant_for
     poiViews: [],
     topPOIs: [],
     recentPOIs: []
@@ -57,6 +58,7 @@ const POIAnalyticsPage = () => {
       setAnalytics({
         totalPOIs: 0,
         poiByType: {},
+        poiByRelevance: {}, // Initialize empty relevant_for stats
         poiViews: generateTimeframeLabels(currentTimeframe).map(label => ({ date: label, views: 0 })),
         topPOIs: [],
         recentPOIs: []
@@ -74,7 +76,16 @@ const POIAnalyticsPage = () => {
       'landscape_religious': '#EC4899'
     };
 
+    // Calculate POIs by relevance
+    const relevanceCounter = {};
+    const relevanceColors = {
+      'Resident': '#4F46E5', // Indigo
+      'Guest': '#F97316',    // Orange
+      'Business': '#0EA5E9'  // Sky blue
+    };
+
     poisData.forEach(poi => {
+      // Process category stats
       const category = poi.category || 'unknown';
       if (!typeCounter[category]) {
         typeCounter[category] = { 
@@ -83,6 +94,19 @@ const POIAnalyticsPage = () => {
         };
       }
       typeCounter[category].count++;
+
+      // Process relevant_for stats
+      if (poi.relevant_for && Array.isArray(poi.relevant_for)) {
+        poi.relevant_for.forEach(relevance => {
+          if (!relevanceCounter[relevance]) {
+            relevanceCounter[relevance] = {
+              count: 0,
+              color: relevanceColors[relevance] || '#6B7280'
+            };
+          }
+          relevanceCounter[relevance].count++;
+        });
+      }
     });
 
     // For the POI views data, we'll generate random data based on the timeframe
@@ -99,6 +123,7 @@ const POIAnalyticsPage = () => {
       id: poi._id,
       name: poi.name_en,
       type: poi.type_en,
+      relevance: Array.isArray(poi.relevant_for) ? poi.relevant_for.join(', ') : 'Unknown',
       // Convert MongoDB date to YYYY-MM-DD format
       created: new Date(poi.createdAt).toISOString().split('T')[0],
       // In a real app, you would have creator info
@@ -113,6 +138,7 @@ const POIAnalyticsPage = () => {
         id: poi._id,
         name: poi.name_en,
         type: poi.type_en,
+        relevance: Array.isArray(poi.relevant_for) ? poi.relevant_for.join(', ') : 'Unknown',
         views: Math.floor(Math.random() * 200) + 100 - (index * 20),
         avgTimeSpent: `${Math.floor(Math.random() * 5) + 1}m ${Math.floor(Math.random() * 50) + 10}s`
       }))
@@ -121,6 +147,7 @@ const POIAnalyticsPage = () => {
     setAnalytics({
       totalPOIs: poisData.length,
       poiByType: typeCounter,
+      poiByRelevance: relevanceCounter,
       poiViews: viewsData,
       topPOIs,
       recentPOIs
@@ -187,6 +214,13 @@ const POIAnalyticsPage = () => {
     0
   );
 
+  // Calculate total relevance counts (note that this will be higher than total POIs
+  // since one POI can be relevant for multiple audiences)
+  const totalRelevanceCount = Object.values(analytics.poiByRelevance).reduce(
+    (total, type) => total + type.count,
+    0
+  );
+
   // Generate and download analytics report as CSV
   const exportAnalyticsReport = () => {
     // Format the data for CSV
@@ -208,16 +242,23 @@ const POIAnalyticsPage = () => {
       reportRows.push([type, data.count, `${percentage.toFixed(1)}%`]);
     });
 
+    // Add POI relevance distribution data
+    reportRows.push([''], ['POI Relevance Distribution'], ['Relevance For', 'Count', 'Percentage']);
+    Object.entries(analytics.poiByRelevance).forEach(([relevance, data]) => {
+      const percentage = (data.count / totalRelevanceCount) * 100;
+      reportRows.push([relevance, data.count, `${percentage.toFixed(1)}%`]);
+    });
+
     // Add top POIs data
-    reportRows.push([''], ['Top POIs by Views'], ['Name', 'Type', 'Views', 'Avg Time']);
+    reportRows.push([''], ['Top POIs by Views'], ['Name', 'Type', 'Relevant For', 'Views', 'Avg Time']);
     analytics.topPOIs.forEach(poi => {
-      reportRows.push([poi.name, poi.type, poi.views, poi.avgTimeSpent]);
+      reportRows.push([poi.name, poi.type, poi.relevance, poi.views, poi.avgTimeSpent]);
     });
 
     // Add recent POIs data
-    reportRows.push([''], ['Recently Added POIs'], ['Name', 'Type', 'Created', 'By']);
+    reportRows.push([''], ['Recently Added POIs'], ['Name', 'Type', 'Relevant For', 'Created', 'By']);
     analytics.recentPOIs.forEach(poi => {
-      reportRows.push([poi.name, poi.type, poi.created, poi.creator]);
+      reportRows.push([poi.name, poi.type, poi.relevance, poi.created, poi.creator]);
     });
 
     // Convert to CSV format
@@ -233,6 +274,13 @@ const POIAnalyticsPage = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  // Find most common relevance
+  const getMostCommonRelevance = () => {
+    if (Object.keys(analytics.poiByRelevance).length === 0) return 'N/A';
+    return Object.entries(analytics.poiByRelevance)
+      .sort((a, b) => b[1].count - a[1].count)[0]?.[0] || 'N/A';
   };
 
   return (
@@ -329,24 +377,24 @@ const POIAnalyticsPage = () => {
               </div>
               
               <div className="bg-white p-6 rounded-lg shadow-md">
-                <h3 className="text-sm font-medium text-gray-500 mb-1">Avg. Views Per POI</h3>
+                <h3 className="text-sm font-medium text-gray-500 mb-1">Most Common Category</h3>
                 <p className="text-3xl font-bold">
-                  {analytics.totalPOIs ? Math.round(analytics.poiViews.reduce((total, item) => total + item.views, 0) / analytics.totalPOIs) : 0}
+                  {Object.entries(analytics.poiByType).sort((a, b) => b[1].count - a[1].count)[0]?.[0] || 'N/A'}
                 </p>
               </div>
               
               <div className="bg-white p-6 rounded-lg shadow-md">
-                <h3 className="text-sm font-medium text-gray-500 mb-1">Most Popular Category</h3>
+                <h3 className="text-sm font-medium text-gray-500 mb-1">Most Common Audience</h3>
                 <p className="text-3xl font-bold">
-                  {Object.entries(analytics.poiByType).sort((a, b) => b[1].count - a[1].count)[0]?.[0] || 'N/A'}
+                  {getMostCommonRelevance()}
                 </p>
               </div>
             </div>
             
             {/* Charts Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
               {/* Views Over Time Chart */}
-              <div className="bg-white p-6 rounded-lg shadow-md">
+              <div className="bg-white p-6 rounded-lg shadow-md lg:col-span-1">
                 <h3 className="font-medium mb-4">Views Over Time</h3>
                 <div className="h-64 flex items-end space-x-2">
                   {analytics.poiViews.map((item, index) => {
@@ -399,6 +447,38 @@ const POIAnalyticsPage = () => {
                   </div>
                 </div>
               </div>
+              
+              {/* POI Relevance Distribution Chart - NEW */}
+              <div className="bg-white p-6 rounded-lg shadow-md">
+                <h3 className="font-medium mb-4">POI Audience Relevance</h3>
+                <div className="h-64 relative">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="h-40 w-40 rounded-full border-8 border-gray-100"></div>
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+                      <div className="text-3xl font-bold">{totalRelevanceCount}</div>
+                      <div className="text-sm text-gray-500">Total Assignments</div>
+                    </div>
+                  </div>
+                  
+                  {/* Relevance Legend */}
+                  <div className="mt-4">
+                    {Object.entries(analytics.poiByRelevance).map(([relevance, data], index) => {
+                      const percentage = (data.count / totalRelevanceCount) * 100;
+                      
+                      return (
+                        <div key={relevance} className="flex items-center mt-2">
+                          <div 
+                            className="w-4 h-4 rounded-sm mr-2" 
+                            style={{ backgroundColor: data.color }}
+                          ></div>
+                          <span className="text-sm">{relevance}: </span>
+                          <span className="text-sm font-medium ml-1">{data.count} ({percentage.toFixed(1)}%)</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
             </div>
             
             {/* Data Tables Section */}
@@ -418,6 +498,9 @@ const POIAnalyticsPage = () => {
                             Type
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Relevant For
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Views
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -433,6 +516,9 @@ const POIAnalyticsPage = () => {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                               {poi.type}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {poi.relevance}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                               {poi.views.toLocaleString()}
@@ -465,6 +551,9 @@ const POIAnalyticsPage = () => {
                             Type
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Relevant For
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Created
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -480,6 +569,9 @@ const POIAnalyticsPage = () => {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                               {poi.type}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {poi.relevance}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                               {poi.created}

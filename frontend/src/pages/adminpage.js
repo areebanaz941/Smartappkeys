@@ -93,23 +93,34 @@ const AdminPage = () => {
               <h3 className="font-medium">Bike Route Management</h3>
               <span>{activeSection === 'bikeRoutes' ? '−' : '+'}</span>
             </div>
-            
-            {activeSection === 'bikeRoutes' && (
-              <div className="p-4 space-y-3">
-                <button className="w-full bg-yellowgreen text-white py-2 px-4 rounded-md hover:bg-[#6aaf1a] transition-colors">
-                  Create New Route
-                </button>
-                <button className="w-full bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors">
-                  Edit Existing Routes
-                </button>
-                <button className="w-full bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors">
-                  Upload GPX File
-                </button>
-                <button className="w-full bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors">
-                  Route Statistics
-                </button>
-              </div>
-            )}
+     
+{activeSection === 'bikeRoutes' && (
+  <div className="p-4 space-y-3">
+    <button 
+      onClick={() => navigate('/admin/bike-routes/new')}
+      className="w-full bg-yellowgreen text-white py-2 px-4 rounded-md hover:bg-[#6aaf1a] transition-colors"
+    >
+      Create New Route
+    </button>
+    <button 
+      onClick={() => navigate('/admin/bike-routes')}
+      className="w-full bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors"
+    >
+      Edit Existing Routes
+    </button>
+    <button 
+      onClick={() => navigate('/admin/bike-routes/upload')}
+      className="w-full bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors"
+    >
+      Upload GPX File
+    </button>
+    <button 
+      onClick={() => navigate('/admin/bike-routes/statistics')}     className="w-full bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors"
+    >
+      Route Statistics
+    </button>
+  </div>
+)}
           </div>
 
           {/* User Management */}
@@ -214,6 +225,40 @@ const AdminPage = () => {
               </div>
             )}
           </div>
+
+          {/* Navigation Management - NEW SECTION */}
+          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div 
+              className="bg-[#032c60] text-white p-4 cursor-pointer flex justify-between items-center"
+              onClick={() => handleSectionChange('navigation')}
+            >
+              <h3 className="font-medium">Navigation Management</h3>
+              <span>{activeSection === 'navigation' ? '−' : '+'}</span>
+            </div>
+            
+            {activeSection === 'navigation' && (
+              <div className="p-4 space-y-3">
+                <button 
+                  onClick={() => navigate('/admin/navigation/routes')}
+                  className="w-full bg-yellowgreen text-white py-2 px-4 rounded-md hover:bg-[#6aaf1a] transition-colors"
+                >
+                  Manage Navigation Routes
+                </button>
+                <button 
+                  onClick={() => navigate('/admin/navigation/settings')}
+                  className="w-full bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors"
+                >
+                  Navigation Settings
+                </button>
+                <button 
+                  onClick={() => navigate('/admin/navigation/analytics')}
+                  className="w-full bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors"
+                >
+                  Usage Analytics
+                </button>
+              </div>
+            )}
+            </div>
         </div>
 
         {/* Quick Stats Summary */}

@@ -47,7 +47,7 @@ const BulkUploadPage = () => {
 
   // Validate that all required fields are present in each row
   const validateData = (data) => {
-    const requiredFields = ['type_it', 'type_en', 'coordinates', 'name_en', 'name_it'];
+    const requiredFields = ['type_it', 'type_en', 'coordinates', 'name_en', 'name_it', 'relevant_for'];
     const errors = [];
 
     data.forEach((row, index) => {
@@ -64,9 +64,36 @@ const BulkUploadPage = () => {
           errors.push(`Row ${index + 1}: Invalid coordinates format. Should be "latitude, longitude"`);
         }
       }
+
+      // Validate relevant_for format
+      if (row.relevant_for) {
+        const relevantFor = row.relevant_for.split(',').map(item => item.trim());
+        const validValues = ['Resident', 'Guest', 'Business'];
+        const invalidValues = relevantFor.filter(val => !validValues.includes(val));
+        
+        if (invalidValues.length > 0) {
+          errors.push(`Row ${index + 1}: Invalid relevant_for values: ${invalidValues.join(', ')}. Must be one or more of: ${validValues.join(', ')}`);
+        }
+      }
     });
 
     return errors;
+  };
+
+  // Prepare data for API submission - process relevant_for field
+  const prepareDataForSubmission = (data) => {
+    return data.map(row => {
+      // Create a copy of the row to avoid mutating the original
+      const processedRow = { ...row };
+      
+      // Process the relevant_for field if it exists
+      if (processedRow.relevant_for) {
+        // Convert comma-separated string to array
+        processedRow.relevant_for = processedRow.relevant_for.split(',').map(item => item.trim());
+      }
+      
+      return processedRow;
+    });
   };
 
   // Handle form submission
@@ -90,17 +117,20 @@ const BulkUploadPage = () => {
       return;
     }
 
+    // Process data for submission
+    const processedData = prepareDataForSubmission(parsedData);
+
     try {
       // Process each row
       const stats = {
-        total: parsedData.length,
+        total: processedData.length,
         successful: 0,
         failed: 0
       };
 
       // This would typically be a batch insert on the server side
       // For now, we'll simulate uploading each record individually
-      for (const row of parsedData) {
+      for (const row of processedData) {
         try {
           const response = await fetch('/api/pois', {
             method: 'POST',
@@ -129,11 +159,11 @@ const BulkUploadPage = () => {
     }
   };
 
-  // For demonstration/testing, we provide a sample CSV download
+  // For demonstration/testing, we provide a sample CSV download with relevant_for field
   const getSampleCSV = () => {
-    const csvData = `type_it,type_en,coordinates,photo,name_en,description_en,name_it,description_it
-Culturale,Cultural,42.6851326966809, 11.907076835632326,https://example.com/image.jpg,San Lorenzo Museum,Example description in English,Museo di San Lorenzo,Esempio di descrizione in italiano
-Paesaggistico,Landscape,42.6851326966809, 11.908076835632326,https://example.com/image2.jpg,San Lorenzo Park,Beautiful park in the town center,Parco di San Lorenzo,Bellissimo parco nel centro del paese`;
+    const csvData = `type_it,type_en,coordinates,photo,name_en,description_en,name_it,description_it,relevant_for
+Culturale,Cultural,42.6851326966809, 11.907076835632326,https://example.com/image.jpg,San Lorenzo Museum,Example description in English,Museo di San Lorenzo,Esempio di descrizione in italiano,Resident, Guest
+Paesaggistico,Landscape,42.6851326966809, 11.908076835632326,https://example.com/image2.jpg,San Lorenzo Park,Beautiful park in the town center,Parco di San Lorenzo,Bellissimo parco nel centro del paese,Guest, Business`;
 
     const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -176,6 +206,7 @@ Paesaggistico,Landscape,42.6851326966809, 11.908076835632326,https://example.com
             <li><strong>description_en</strong>: POI description in English</li>
             <li><strong>name_it</strong>: POI name in Italian</li>
             <li><strong>description_it</strong>: POI description in Italian</li>
+            <li><strong>relevant_for</strong>: Comma-separated list of who this POI is relevant for (e.g., "Resident, Guest, Business")</li>
           </ul>
           <button
             onClick={getSampleCSV}

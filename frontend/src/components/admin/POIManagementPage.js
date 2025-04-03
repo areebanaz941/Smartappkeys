@@ -123,7 +123,12 @@ const POIManagementPage = ({ initialView = 'list' }) => {// 'list', 'add', 'edit
                         setError(`Error parsing CSV: ${results.errors[0].message}`);
                         return;
                     }
-                    setParsedData(results.data);
+                    // Process any relevant_for fields to prepare for preview
+                    const processedData = results.data.map(row => {
+                        // No need to modify it here, just return the raw data for preview
+                        return row;
+                    });
+                    setParsedData(processedData);
                 },
                 error: (err) => {
                     setError(`Error parsing CSV: ${err.message}`);
@@ -166,13 +171,24 @@ const POIManagementPage = ({ initialView = 'list' }) => {// 'list', 'add', 'edit
 
         try {
             // Validate required fields
-            const requiredFields = ['category', 'type_it', 'type_en', 'coordinates', 'name_en', 'name_it'];
+            const requiredFields = ['category', 'type_it', 'type_en', 'coordinates', 'name_en', 'name_it', 'relevant_for'];
             const invalidRows = [];
             
             parsedData.forEach((row, index) => {
                 const missingFields = requiredFields.filter(field => !row[field] || row[field].trim() === '');
                 if (missingFields.length > 0) {
                     invalidRows.push(`Row ${index + 1}: Missing ${missingFields.join(', ')}`);
+                }
+                
+                // Validate relevant_for format if it exists
+                if (row.relevant_for) {
+                    const relevantFor = row.relevant_for.split(',').map(item => item.trim());
+                    const validValues = ['Resident', 'Guest', 'Business'];
+                    const invalidValues = relevantFor.filter(val => !validValues.includes(val));
+                    
+                    if (invalidValues.length > 0) {
+                        invalidRows.push(`Row ${index + 1}: Invalid relevant_for values: ${invalidValues.join(', ')}. Must be one or more of: ${validValues.join(', ')}`);
+                    }
                 }
             });
 
@@ -186,8 +202,16 @@ const POIManagementPage = ({ initialView = 'list' }) => {// 'list', 'add', 'edit
             let successCount = 0;
             let errorCount = 0;
 
-            for (const poi of parsedData) {
+            for (const rawPoi of parsedData) {
                 try {
+                    // Create a copy to avoid mutating the original
+                    const poi = { ...rawPoi };
+                    
+                    // Process relevant_for field (convert from string to array)
+                    if (typeof poi.relevant_for === 'string') {
+                        poi.relevant_for = poi.relevant_for.split(',').map(item => item.trim());
+                    }
+                    
                     // Check if POI has an ID - if yes, update existing POI
                     if (poi._id) {
                         const updateResponse = await fetch(`http://localhost:5000/api/pois/${poi._id}`, {
@@ -239,7 +263,10 @@ const POIManagementPage = ({ initialView = 'list' }) => {// 'list', 'add', 'edit
         poi.name_it?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         poi.type_en?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         poi.type_it?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        poi.category?.toLowerCase().includes(searchTerm.toLowerCase())
+        poi.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        // Add search in relevant_for field
+        (Array.isArray(poi.relevant_for) && 
+         poi.relevant_for.some(rel => rel.toLowerCase().includes(searchTerm.toLowerCase())))
     );
   
     // Pagination logic
@@ -264,7 +291,8 @@ const POIManagementPage = ({ initialView = 'list' }) => {// 'list', 'add', 'edit
                 name_en: "Example POI",
                 description_en: "This is an example POI",
                 name_it: "Esempio POI",
-                description_it: "Questo è un esempio di POI"
+                description_it: "Questo è un esempio di POI",
+                relevant_for: "Resident, Guest"
             }
         ];
 
@@ -437,6 +465,9 @@ const POIManagementPage = ({ initialView = 'list' }) => {// 'list', 'add', 'edit
                                                     Type
                                                 </th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Relevant For
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                     Coordinates
                                                 </th>
                                                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -481,6 +512,15 @@ const POIManagementPage = ({ initialView = 'list' }) => {// 'list', 'add', 'edit
                                                         <div className="text-sm text-gray-900">{poi.type_en}</div>
                                                         <div className="text-sm text-gray-500">{poi.type_it}</div>
                                                     </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+    <div className="text-sm text-gray-900">
+        {Array.isArray(poi.relevant_for) 
+            ? poi.relevant_for.join(', ') 
+            : typeof poi.relevant_for === 'string'
+                ? poi.relevant_for
+                : 'N/A'}
+    </div>
+</td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                         {typeof poi.coordinates === 'object' && poi.coordinates.lat ? 
                                                             `${poi.coordinates.lat}, ${poi.coordinates.lng}` : 
@@ -607,6 +647,7 @@ const POIManagementPage = ({ initialView = 'list' }) => {// 'list', 'add', 'edit
                                 <li><strong>description_en</strong>: POI description in English</li>
                                 <li><strong>name_it</strong>: POI name in Italian</li>
                                 <li><strong>description_it</strong>: POI description in Italian</li>
+                                <li><strong>relevant_for</strong>: Comma-separated list of audiences (e.g. "Resident, Guest, Business")</li>
                             </ul>
                             
                             <div className="flex gap-2 mb-6">
@@ -644,7 +685,7 @@ const POIManagementPage = ({ initialView = 'list' }) => {// 'list', 'add', 'edit
                                     <h3 className="text-lg font-medium mb-2">Preview ({Math.min(5, parsedData.length)} of {parsedData.length} rows)</h3>
                                     <div className="overflow-x-auto">
                                         <table className="min-w-full divide-y divide-gray-200">
-                                            <thead className="bg-gray-50">
+                                        <thead className="bg-gray-50">
                                                 <tr>
                                                     {Object.keys(parsedData[0]).map((header, index) => (
                                                         <th 
@@ -703,11 +744,11 @@ const POIManagementPage = ({ initialView = 'list' }) => {// 'list', 'add', 'edit
                                 </button>
                             </div>
                         </form>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+                    </div>
+                )}
+            </div>
+        </div>
+    );
 };
 
 export default POIManagementPage;

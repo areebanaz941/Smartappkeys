@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Islamabad Navigation Map</title>
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
+    <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.js'></script>
+    <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.css' type='text/css' />
+    <style>
+        body { 
+            margin: 0; 
+            padding: 0; 
+            font-family: Arial, sans-serif;
+        }
+        #map { 
+            position: absolute; 
+            top: 0; 
+            bottom: 0; 
+            width: 100%; 
+        }
+        .controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1;
+            background-color: white;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .mode-toggle {
+            margin-bottom: 10px;
+        }
+        .mode-toggle button {
+            background-color: #f8f8f8;
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            cursor: pointer;
+            outline: none;
+        }
+        .mode-toggle button.active {
+            background-color: #4264fb;
+            color: white;
+            border-color: #4264fb;
+        }
+        .poi-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .poi-item {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            font-weight: bold;
+            color: #333;
+        }
+        .poi-item:hover {
+            background-color: #f0f0f0;
+        }
+        #route-summary {
+            position: absolute;
+            bottom: 30px;
+            left: 10px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            max-width: 300px;
+            display: none;
+            z-index: 2;
+        }
+        .summary-item {
+            margin-bottom: 8px;
+        }
+        #start-navigation {
+            background-color: #4264fb;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .location-btn {
+            width: 100%; 
+            background-color: #4264fb; 
+            color: white; 
+            border: none; 
+            padding: 8px 12px; 
+            cursor: pointer; 
+            border-radius: 4px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        #status-message {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 4px;
+            z-index: 100;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    
+    <div class="controls">
+        <div class="mode-toggle">
+            <button id="cycling-btn" class="active">Cycling</button>
+            <button id="walking-btn">Walking</button>
+        </div>
+        <div>
+            <button id="show-location-btn" class="location-btn">Show My Location</button>
+        </div>
+        <div class="poi-list">
+            <h3>Points of Interest</h3>
+            <div class="poi-item" data-index="0">Faisal Mosque</div>
+            <div class="poi-item" data-index="1">Daman-e-Koh</div>
+            <div class="poi-item" data-index="2">Pakistan Monument</div>
+            <div class="poi-item" data-index="3">Centaurus Mall</div>
+        </div>
+    </div>
+    
+    <div id="route-summary">
+        <div class="summary-item">
+            <strong>Distance:</strong> <span id="route-distance">0</span> km
+        </div>
+        <div class="summary-item">
+            <strong>Duration:</strong> <span id="route-duration">0</span> minutes
+        </div>
+        <button id="start-navigation">Start Navigation</button>
+    </div>
+
+    <div id="status-message"></div>
+
+    <script>
+        // Define POIs
+        const pois = [
+            {
+                name: "Faisal Mosque",
+                coordinates: [73.0479, 33.6844],
+                description: "The largest mosque in Pakistan, located in Islamabad."
+            },
+            {
+                name: "Daman-e-Koh",
+                coordinates: [73.0902, 33.7294],
+                description: "A viewing point and hill top garden north of Islamabad in the middle of the Margalla Hills."
+            },
+            {
+                name: "Pakistan Monument",
+                coordinates: [73.0587, 33.7334],
+                description: "A national monument representing the nation's history through architecture."
+            },
+            {
+                name: "Centaurus Mall",
+                coordinates: [73.0814, 33.6930],
+                description: "A major shopping mall in the heart of Islamabad."
+            }
+        ];
+        
+        // Helper function to show a status message
+        function showStatus(message, duration = 3000) {
+            const statusElement = document.getElementById('status-message');
+            statusElement.textContent = message;
+            statusElement.style.display = 'block';
+            
+            setTimeout(() => {
+                statusElement.style.display = 'none';
+            }, duration);
+        }
+        
+        // Initialize map when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize map
+            mapboxgl.accessToken = 'pk.eyJ1IjoibTJvdGVjaCIsImEiOiJjbTczbzU4aWQwMWdmMmpzY3N4ejJ3czlnIn0.fLDR4uG8kD8-g_IDM8ZPdQ';
+            
+            const map = new mapboxgl.Map({
+                container: 'map',
+                style: 'mapbox://styles/mapbox/streets-v11',
+                center: [73.0479, 33.6844], // Islamabad coordinates
+                zoom: 12
+            });
+            
+            // Add controls only after map loads
+            map.on('load', function() {
+                // Add navigation control
+                map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+                
+                // Add geolocate control
+                const geolocate = new mapboxgl.GeolocateControl({
+                    positionOptions: {
+                        enableHighAccuracy: true
+                    },
+                    trackUserLocation: true,
+                    showUserHeading: true
+                });
+                map.addControl(geolocate, 'bottom-right');
+                
+                // Add the directions control
+                const directions = new mapboxgl.Directions({
+                    accessToken: mapboxgl.accessToken,
+                    unit: 'metric',
+                    profile: 'mapbox/cycling', // Default to cycling
+                    alternatives: true,
+                    congestion: true,
+                    controls: {
+                        instructions: true
+                    }
+                });
+                
+                map.addControl(directions, 'top-left');
+                
+                // Add markers programmatically with standard Mapbox markers
+                const markers = [];
+                
+                for (let i = 0; i < pois.length; i++) {
+                    const poi = pois[i];
+                    
+                    // Create a standard marker
+                    const marker = new mapboxgl.Marker({
+                        color: '#FF0000',  // Red color
+                        scale: 1.2         // Make it slightly larger
+                    })
+                    .setLngLat(poi.coordinates)
+                    .addTo(map);
+                    
+                    // Create a popup but don't attach it yet
+                    const popup = new mapboxgl.Popup({ offset: 25 })
+                    .setHTML(`
+                        <h3>${poi.name}</h3>
+                        <p>${poi.description}</p>
+                        <button style="
+                            background-color: #4264fb; 
+                            color: white; 
+                            border: none; 
+                            padding: 8px 15px; 
+                            border-radius: 4px; 
+                            cursor: pointer; 
+                            width: 100%; 
+                            font-weight: bold;" 
+                            onclick="navigateToPOI(${i})">
+                            Navigate Here
+                        </button>
+                    `);
+                    
+                    // Add popup to marker
+                    marker.setPopup(popup);
+                    
+                    // Store marker reference
+                    markers.push(marker);
+                }
+                
+                // Function to navigate to a POI
+                function navigateToPOI(index) {
+                    const poi = pois[index];
+                    
+                    if (!poi) {
+                        showStatus('POI not found!');
+                        return;
+                    }
+                    
+                    // Set the selected POI as destination
+                    directions.setDestination(poi.coordinates);
+                    
+                    // Try to get user's current location for origin
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(
+                            (position) => {
+                                const userLocation = [position.coords.longitude, position.coords.latitude];
+                                directions.setOrigin(userLocation);
+                                showStatus(`Navigating to ${poi.name}...`);
+                            }, 
+                            () => {
+                                // If geolocation fails, set a default origin in Islamabad
+                                directions.setOrigin([73.0654, 33.6844]); // Default location in Islamabad
+                                showStatus(`Navigating to ${poi.name} from default location`);
+                            },
+                            {
+                                enableHighAccuracy: true,
+                                timeout: 5000,
+                                maximumAge: 0
+                            }
+                        );
+                    } else {
+                        // If geolocation not supported, set a default origin
+                        directions.setOrigin([73.0654, 33.6844]);
+                        showStatus(`Navigating to ${poi.name} from default location`);
+                    }
+                    
+                    // Close any open popups
+                    markers.forEach(m => {
+                        if (m.getPopup().isOpen()) {
+                            m.togglePopup();
+                        }
+                    });
+                    
+                    // Try to trigger geolocate
+                    geolocate.trigger();
+                }
+                
+                // Make function available globally
+                window.navigateToPOI = navigateToPOI;
+                
+                // Add click events to POI list items
+                document.querySelectorAll('.poi-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        const index = parseInt(this.getAttribute('data-index'));
+                        
+                        if (isNaN(index) || index < 0 || index >= pois.length) {
+                            showStatus('Invalid POI selection');
+                            return;
+                        }
+                        
+                        const poi = pois[index];
+                        
+                        // Fly to the POI
+                        map.flyTo({
+                            center: poi.coordinates,
+                            zoom: 15,
+                            essential: true
+                        });
+                        
+                        // Open the popup for this marker
+                        markers[index].togglePopup();
+                        
+                        showStatus(`Selected: ${poi.name}`);
+                    });
+                });
+                
+                // Listen for route updates
+                directions.on('route', (e) => {
+                    const routes = e.route;
+                    // Make sure there's at least one route
+                    if (routes && routes.length > 0) {
+                        // Get the selected route
+                        const selectedRoute = routes[0];
+                        
+                        // Show route summary
+                        document.getElementById('route-summary').style.display = 'block';
+                        document.getElementById('route-distance').textContent = (selectedRoute.distance / 1000).toFixed(2);
+                        document.getElementById('route-duration').textContent = Math.round(selectedRoute.duration / 60);
+                    }
+                });
+                
+                // Toggle between cycling and walking modes
+                document.getElementById('cycling-btn').addEventListener('click', function() {
+                    toggleNavigationMode('cycling');
+                    this.classList.add('active');
+                    document.getElementById('walking-btn').classList.remove('active');
+                });
+                
+                document.getElementById('walking-btn').addEventListener('click', function() {
+                    toggleNavigationMode('walking');
+                    this.classList.add('active');
+                    document.getElementById('cycling-btn').classList.remove('active');
+                });
+                
+                // Function to toggle navigation mode
+                function toggleNavigationMode(mode) {
+                    if (mode === 'walking') {
+                        directions.setProfile('mapbox/walking');
+                        showStatus('Walking mode activated');
+                    } else {
+                        directions.setProfile('mapbox/cycling');
+                        showStatus('Cycling mode activated');
+                    }
+                    
+                    // Recalculate route if origin and destination are already set
+                    if (directions.getOrigin() && directions.getDestination()) {
+                        directions.query();
+                    }
+                }
+                
+                // Start navigation button
+                document.getElementById('start-navigation').addEventListener('click', () => {
+                    // Fit the map to the route bounds
+                    map.fitBounds(directions.getBounds(), {
+                        padding: 100
+                    });
+                    
+                    // Trigger the geolocate control to show user's location
+                    geolocate.trigger();
+                    
+                    showStatus('Navigation started! Your current location should now be visible.', 5000);
+                });
+                
+                // Location button
+                document.getElementById('show-location-btn').addEventListener('click', function() {
+                    geolocate.trigger();
+                    showStatus('Finding your location...');
+                });
+                
+                // Auto-trigger geolocation after a short delay
+                setTimeout(() => {
+                    geolocate.trigger();
+                }, 2000);
+                
+                showStatus('Map loaded successfully! Click a marker or POI list item to begin.', 3000);
+            });
+        });
+    </script>
+</body>
+</html>

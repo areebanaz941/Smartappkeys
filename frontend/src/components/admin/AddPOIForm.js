@@ -9,7 +9,7 @@ const AddPOIForm = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [showNotification, setShowNotification] = useState(false);
   
-  // Form state with new category field
+  // Form state with new category field and relevant_for field
   const [formData, setFormData] = useState({
     category: '',      // New master category field
     type_it: '',
@@ -19,7 +19,8 @@ const AddPOIForm = () => {
     name_en: '',
     description_en: '',
     name_it: '',
-    description_it: ''
+    description_it: '',
+    relevant_for: []   // New relevant_for field as array
   });
 
   // Auto-hide notification when it's visible
@@ -40,6 +41,13 @@ const AddPOIForm = () => {
     { category: 'landscape', it: 'Culturale/paesaggistico', en: 'Landscape' },
     { category: 'religious', it: 'Culturale/religioso', en: 'Religious' },
     { category: 'landscape_religious', it: 'Paesaggistico/religioso', en: 'Landscape/Religious' },
+  ];
+
+  // Relevance options
+  const relevanceOptions = [
+    { value: 'Resident', label: 'Resident' },
+    { value: 'Guest', label: 'Guest' },
+    { value: 'Business', label: 'Business' }
   ];
 
   // Handle category selection
@@ -64,6 +72,25 @@ const AddPOIForm = () => {
     });
   };
 
+  // Handle checkbox changes for relevant_for
+  const handleRelevanceChange = (e) => {
+    const { value, checked } = e.target;
+    
+    if (checked) {
+      // Add to array if checked
+      setFormData({
+        ...formData,
+        relevant_for: [...formData.relevant_for, value]
+      });
+    } else {
+      // Remove from array if unchecked
+      setFormData({
+        ...formData,
+        relevant_for: formData.relevant_for.filter(item => item !== value)
+      });
+    }
+  };
+
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -76,6 +103,11 @@ const AddPOIForm = () => {
       // Log form data for debugging
       console.log('Form data being submitted:', formData);
 
+      // Validate relevant_for field
+      if (formData.relevant_for.length === 0) {
+        throw new Error('Please select at least one relevance option');
+      }
+
       // Extract lat and lng from coordinates string for validation
       let coordinates = formData.coordinates.split(',').map(coord => coord.trim());
       
@@ -84,7 +116,7 @@ const AddPOIForm = () => {
         throw new Error('Coordinates must be in format: latitude, longitude');
       }
 
-      // Create POI object with new category field
+      // Create POI object with new fields
       const poiData = {
         category: formData.category,
         type_it: formData.type_it,
@@ -97,7 +129,8 @@ const AddPOIForm = () => {
         name_en: formData.name_en,
         description_en: formData.description_en,
         name_it: formData.name_it,
-        description_it: formData.description_it
+        description_it: formData.description_it,
+        relevant_for: formData.relevant_for // Send as array
       };
 
       // Log the final request payload
@@ -151,7 +184,8 @@ const AddPOIForm = () => {
         name_en: '',
         description_en: '',
         name_it: '',
-        description_it: ''
+        description_it: '',
+        relevant_for: []
       });
     } catch (error) {
       setErrorMessage(error.message);
@@ -218,6 +252,32 @@ const AddPOIForm = () => {
               ))}
             </select>
             <p className="text-xs text-gray-500 mt-1">Internal classification used for grouping POIs</p>
+          </div>
+          
+          {/* Relevant For - New Field */}
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Relevant For (select at least one)
+            </label>
+            <div className="flex flex-wrap gap-4">
+              {relevanceOptions.map((option) => (
+                <div key={option.value} className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id={`relevance-${option.value}`}
+                    name="relevant_for"
+                    value={option.value}
+                    checked={formData.relevant_for.includes(option.value)}
+                    onChange={handleRelevanceChange}
+                    className="h-4 w-4 text-yellowgreen focus:ring-yellowgreen border-gray-300 rounded"
+                  />
+                  <label htmlFor={`relevance-${option.value}`} className="ml-2 text-sm text-gray-700">
+                    {option.label}
+                  </label>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Indicates who this POI is relevant for</p>
           </div>
           
           {/* Display Types (now auto-filled based on category) */}

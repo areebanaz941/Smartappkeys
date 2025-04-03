@@ -1,4 +1,4 @@
-// server.js - Improved version with better error handling
+// server.js - Updated with bike route endpoints
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
@@ -8,7 +8,8 @@ const fs = require('fs');
 
 // Import routes
 const mainRoutes = require('./routes/routes');
-const poiRoutes = require('./routes/poi.routes'); // Import the separate POI routes
+const poiRoutes = require('./routes/poi.routes'); 
+const bikeRouteRoutes = require('./routes/bike-routes.routes'); // Import the bike route routes
 
 // Initialize express app
 const app = express();
@@ -26,6 +27,13 @@ const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
   console.log('Created uploads directory at:', uploadDir);
+}
+
+// Ensure GPX uploads directory exists
+const gpxUploadDir = path.join(__dirname, 'uploads/gpx');
+if (!fs.existsSync(gpxUploadDir)) {
+  fs.mkdirSync(gpxUploadDir, { recursive: true });
+  console.log('Created GPX uploads directory at:', gpxUploadDir);
 }
 
 // CORS setup with more options
@@ -63,8 +71,14 @@ app.use((req, res, next) => {
 app.use('/uploads', express.static(uploadDir));
 
 // Routes
+// Explicitly log when routes are registered
+console.log('Registering route handlers...');
 app.use('/api', mainRoutes); // Main routes from routes.js
+console.log('Main routes registered at /api');
 app.use('/api/pois', poiRoutes); // POI-specific routes from poi.routes.js
+console.log('POI routes registered at /api/pois');
+app.use('/api/bike-routes', bikeRouteRoutes); // Bike route-specific routes
+console.log('Bike route routes registered at /api/bike-routes');
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -146,6 +160,7 @@ mongoose.connect(MONGODB_URI, {
   app.listen(PORT, () => {
     console.log(`✅ Server running on port ${PORT}`);
     console.log(`API available at: http://localhost:${PORT}/api`);
+    console.log(`Bike Routes API available at: http://localhost:${PORT}/api/bike-routes`);
   });
 })
 .catch(err => {

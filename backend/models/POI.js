@@ -36,6 +36,12 @@ const poiSchema = new mongoose.Schema({
   },
   description_it: { 
     type: String 
+  },
+  // New field for relevant_for
+  relevant_for: {
+    type: [String],
+    enum: ['Resident', 'Guest', 'Business'],
+    required: true  // Change from default: [] to required: true
   }
 }, { timestamps: true });
 
@@ -46,7 +52,8 @@ poiSchema.index({
   type_en: 'text', 
   type_it: 'text',
   description_en: 'text',
-  description_it: 'text'
+  description_it: 'text',
+  relevant_for: 'text'
 });
 
 module.exports = mongoose.model('Poi', poiSchema);

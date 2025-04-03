@@ -10,10 +10,19 @@ import AdminPage from './pages/adminpage';
 import POIManagementPage from './components/admin/POIManagementPage';
 import POIAnalyticsPage from './components/admin/POIAnalyticsPage';
 import BulkUploadPage from './components/admin/BulkUploadPage';
-import MapPage from './pages/map';
+import MapPage from './pages/map/map';
 import ResidentDashboard from './components/Dashboard/ResidentDashboard';
 import TouristDashboard from './components/Dashboard/TouristDashboard';
 import BusinessDashboard from './components/Dashboard/BusinessDashboard';
+
+import RouteCreationPage from './pages/navigation/RouteCreationPage';
+import BikeWalkNavigation from './components/admin/BikeWalkNavigation';
+import RouteManagementPage from './components/admin/RouteManagementPage';
+import NavigationAnalyticsPage from './components/admin/NavigationAnalyticsPage';
+import NavigationSettingsPage from './components/admin/NavigationSettingsPage';
+
+import BikeRouteUpload from './components/admin/GpxUploadForm';
+import BikeRouteManagement from './components/admin/BikeRouteManagement';
 function App() {
   return (
     <BrowserRouter>
@@ -29,7 +38,15 @@ function App() {
           <Route path="/resident-dashboard" element={<ResidentDashboard/>} />
           <Route path="/tourist-dashboard" element={<TouristDashboard/>} />
           <Route path="/business-dashboard" element={<BusinessDashboard/>} />
+
+          {/* Bike Route Management Routes */}
+          <Route path="/admin/bike-routes" element={<BikeRouteManagement />} />
+          <Route path="/admin/bike-routes/upload" element={<BikeRouteUpload />} />
+          <Route path="/admin/bike-routes/new" element={<BikeRouteManagement mode="create" />} />
+          <Route path="/admin/bike-routes/edit/:id" element={<BikeRouteManagement mode="edit" />} />
+          <Route path="/admin/bike-routes/statistics" element={<BikeRouteManagement mode="statistics" />} />
           {/* Add more routes as needed */}
+
         </Route>
       </Routes>
     </BrowserRouter>

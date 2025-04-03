@@ -39,7 +39,8 @@ router.post('/', async (req, res) => {
       name_en,
       description_en,
       name_it,
-      description_it
+      description_it,
+      relevant_for // New field
     } = req.body;
 
     // Validate required fields
@@ -59,10 +60,32 @@ router.post('/', async (req, res) => {
       });
     }
 
+    // Validate relevant_for if provided
+    const validRelevantFor = ['Resident', 'Guest', 'Business'];
+    if (relevant_for && !Array.isArray(relevant_for)) {
+      // Convert comma-separated string to array
+      const relevantForArray = relevant_for.split(',').map(item => item.trim());
+      
+      // Check if all values are valid
+      const invalidValues = relevantForArray.filter(value => !validRelevantFor.includes(value));
+      if (invalidValues.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid relevant_for values: ${invalidValues.join(', ')}. Must be one or more of: ${validRelevantFor.join(', ')}`
+        });
+      }
+    }
+
     // Convert coordinates object to string if needed
     let coordsString = coordinates;
     if (typeof coordinates === 'object' && coordinates.lat && coordinates.lng) {
       coordsString = `${coordinates.lat}, ${coordinates.lng}`;
+    }
+
+    // Process relevant_for field if it's a comma-separated string
+    let relevantForArray = relevant_for;
+    if (typeof relevant_for === 'string') {
+      relevantForArray = relevant_for.split(',').map(item => item.trim());
     }
 
     // Create POI
@@ -75,7 +98,8 @@ router.post('/', async (req, res) => {
       name_en,
       description_en,
       name_it,
-      description_it
+      description_it,
+      relevant_for: relevantForArray
     });
 
     const savedPoi = await poi.save();
@@ -143,8 +167,9 @@ router.post('/bulk', upload.single('file'), async (req, res) => {
     // Validate each POI
     const invalidPois = [];
     const validPois = [];
-    const requiredFields = ['category', 'type_it', 'type_en', 'coordinates', 'name_en', 'name_it'];
+    const requiredFields = ['category', 'type_it', 'type_en', 'coordinates', 'name_en', 'name_it', 'relevant_for'];
     const validCategories = ['business', 'cultural', 'landscape', 'religious', 'landscape_religious'];
+    const validRelevantFor = ['Resident', 'Guest', 'Business'];
 
     for (let i = 0; i < results.length; i++) {
       const poi = results[i];
@@ -166,6 +191,33 @@ router.post('/bulk', upload.single('file'), async (req, res) => {
         invalidPois.push({
           index: i + 1,
           reason: `Invalid category: ${poi.category}. Must be one of: ${validCategories.join(', ')}`,
+          data: poi
+        });
+        continue;
+      }
+
+      // Process and validate relevant_for field
+      if (typeof poi.relevant_for === 'string') {
+        // Convert comma-separated string to array
+        poi.relevant_for = poi.relevant_for.split(',').map(item => item.trim());
+      }
+
+      // Validate relevant_for values
+      if (!Array.isArray(poi.relevant_for)) {
+        invalidPois.push({
+          index: i + 1,
+          reason: `Invalid relevant_for format. Must be an array or comma-separated string`,
+          data: poi
+        });
+        continue;
+      }
+
+      // Check if all values in relevant_for array are valid
+      const invalidValues = poi.relevant_for.filter(value => !validRelevantFor.includes(value));
+      if (invalidValues.length > 0) {
+        invalidPois.push({
+          index: i + 1,
+          reason: `Invalid relevant_for values: ${invalidValues.join(', ')}. Must be one or more of: ${validRelevantFor.join(', ')}`,
           data: poi
         });
         continue;
@@ -275,9 +327,65 @@ router.post('/bulk', upload.single('file'), async (req, res) => {
  * @desc    Get all POIs
  * @access  Public
  */
+/**
+ * @route   GET /api/pois
+ * @desc    Get all POIs with optional filtering
+ * @access  Public
+ */
 router.get('/', async (req, res) => {
   try {
-    const pois = await Poi.find().sort('-createdAt');
+    // Build query object
+    const query = {};
+    
+    // Handle relevant_for filtering
+    if (req.query.relevantFor) {
+      // Convert comma-separated string to array
+      const relevantForFilter = req.query.relevantFor.split(',').map(item => item.trim());
+      
+      // Validate the values
+      const validRelevantFor = ['Resident', 'Guest', 'Business'];
+      const invalidValues = relevantForFilter.filter(value => !validRelevantFor.includes(value));
+      
+      if (invalidValues.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid relevantFor values: ${invalidValues.join(', ')}. Must be one or more of: ${validRelevantFor.join(', ')}`
+        });
+      }
+      
+      // If only one value, find POIs that contain that value
+      if (relevantForFilter.length === 1) {
+        query.relevant_for = relevantForFilter[0];
+      } 
+      // If multiple values, find POIs that match any of the values (OR condition)
+      else if (relevantForFilter.length > 1) {
+        query.relevant_for = { $in: relevantForFilter };
+      }
+    }
+    
+    // Handle category filtering (if it exists in your current implementation)
+    if (req.query.category) {
+      const validCategories = ['business', 'cultural', 'landscape', 'religious', 'landscape_religious'];
+      if (!validCategories.includes(req.query.category)) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid category. Must be one of: ${validCategories.join(', ')}`
+        });
+      }
+      query.category = req.query.category;
+    }
+    
+    // Handle type filtering
+    if (req.query.type) {
+      // Search in both type_en and type_it fields
+      query.$or = [
+        { type_en: req.query.type },
+        { type_it: req.query.type }
+      ];
+    }
+    
+    // Execute the query
+    const pois = await Poi.find(query).sort('-createdAt');
 
     return res.status(200).json({
       success: true,
@@ -299,6 +407,11 @@ router.get('/', async (req, res) => {
  * @desc    Get POIs by category
  * @access  Public
  */
+/**
+ * @route   GET /api/pois/category/:category
+ * @desc    Get POIs by category with optional relevance filtering
+ * @access  Public
+ */
 router.get('/category/:category', async (req, res) => {
   try {
     const category = req.params.category;
@@ -311,7 +424,36 @@ router.get('/category/:category', async (req, res) => {
       });
     }
     
-    const pois = await Poi.find({ category }).sort('-createdAt');
+    // Build query object starting with the category
+    const query = { category };
+    
+    // Handle relevant_for filtering if provided in query params
+    if (req.query.relevantFor) {
+      // Convert comma-separated string to array
+      const relevantForFilter = req.query.relevantFor.split(',').map(item => item.trim());
+      
+      // Validate the values
+      const validRelevantFor = ['Resident', 'Guest', 'Business'];
+      const invalidValues = relevantForFilter.filter(value => !validRelevantFor.includes(value));
+      
+      if (invalidValues.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid relevantFor values: ${invalidValues.join(', ')}. Must be one or more of: ${validRelevantFor.join(', ')}`
+        });
+      }
+      
+      // If only one value, find POIs that contain that value
+      if (relevantForFilter.length === 1) {
+        query.relevant_for = relevantForFilter[0];
+      } 
+      // If multiple values, find POIs that match any of the values (OR condition)
+      else if (relevantForFilter.length > 1) {
+        query.relevant_for = { $in: relevantForFilter };
+      }
+    }
+    
+    const pois = await Poi.find(query).sort('-createdAt');
 
     return res.status(200).json({
       success: true,
@@ -363,6 +505,11 @@ router.get('/:id', async (req, res) => {
  * @desc    Update POI by ID
  * @access  Private (Admin only)
  */
+/**
+ * @route   PUT /api/pois/:id
+ * @desc    Update POI by ID
+ * @access  Private (Admin only)
+ */
 router.put('/:id', async (req, res) => {
   try {
     const {
@@ -374,11 +521,12 @@ router.put('/:id', async (req, res) => {
       name_en,
       description_en,
       name_it,
-      description_it
+      description_it,
+      relevant_for
     } = req.body;
 
     // Validate required fields
-    if (!category || !type_it || !type_en || !coordinates || !name_en || !name_it) {
+    if (!category || !type_it || !type_en || !coordinates || !name_en || !name_it || !relevant_for) {
       return res.status(400).json({ 
         success: false,
         message: 'Missing required fields' 
@@ -391,6 +539,32 @@ router.put('/:id', async (req, res) => {
       return res.status(400).json({
         success: false,
         message: `Invalid category. Must be one of: ${validCategories.join(', ')}`
+      });
+    }
+
+    // Validate and process relevant_for
+    let relevantForArray = relevant_for;
+    const validRelevantFor = ['Resident', 'Guest', 'Business'];
+    
+    // Convert string to array if needed
+    if (typeof relevant_for === 'string') {
+      relevantForArray = relevant_for.split(',').map(item => item.trim());
+    }
+    
+    // Validate relevant_for values
+    if (!Array.isArray(relevantForArray)) {
+      return res.status(400).json({
+        success: false,
+        message: 'relevant_for must be an array or comma-separated string'
+      });
+    }
+    
+    // Check if all values are valid
+    const invalidValues = relevantForArray.filter(value => !validRelevantFor.includes(value));
+    if (invalidValues.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid relevant_for values: ${invalidValues.join(', ')}. Must be one or more of: ${validRelevantFor.join(', ')}`
       });
     }
 
@@ -410,7 +584,8 @@ router.put('/:id', async (req, res) => {
       name_en,
       description_en,
       name_it,
-      description_it
+      description_it,
+      relevant_for: relevantForArray
     };
 
     // Update POI
@@ -476,12 +651,50 @@ router.delete('/:id', async (req, res) => {
  * @desc    Search POIs by text
  * @access  Public
  */
+/**
+ * @route   GET /api/pois/search/:query
+ * @desc    Search POIs by text with optional relevance filtering
+ * @access  Public
+ */
 router.get('/search/:query', async (req, res) => {
   try {
     const searchQuery = req.params.query;
-    const pois = await Poi.find({ 
-      $text: { $search: searchQuery } 
-    }).sort({ score: { $meta: 'textScore' } });
+    
+    // Start with the text search query
+    const baseQuery = {
+      $text: { $search: searchQuery }
+    };
+    
+    // Build final query object
+    let finalQuery = { ...baseQuery };
+    
+    // Add relevant_for filtering if provided
+    if (req.query.relevantFor) {
+      // Convert comma-separated string to array
+      const relevantForFilter = req.query.relevantFor.split(',').map(item => item.trim());
+      
+      // Validate the values
+      const validRelevantFor = ['Resident', 'Guest', 'Business'];
+      const invalidValues = relevantForFilter.filter(value => !validRelevantFor.includes(value));
+      
+      if (invalidValues.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid relevantFor values: ${invalidValues.join(', ')}. Must be one or more of: ${validRelevantFor.join(', ')}`
+        });
+      }
+      
+      // Add to query - find documents that match any of the specified values
+      if (relevantForFilter.length === 1) {
+        finalQuery.relevant_for = relevantForFilter[0];
+      } else {
+        finalQuery.relevant_for = { $in: relevantForFilter };
+      }
+    }
+    
+    // Execute the search with combined query
+    const pois = await Poi.find(finalQuery)
+      .sort({ score: { $meta: 'textScore' } });
 
     return res.status(200).json({
       success: true,
@@ -497,6 +710,7 @@ router.get('/search/:query', async (req, res) => {
     });
   }
 });
+
 
 /**
  * @route   GET /api/pois/template/download/:format
@@ -524,7 +738,8 @@ router.get('/template/download/:format', (req, res) => {
       name_en: "Example POI",
       description_en: "This is an example POI",
       name_it: "Esempio POI",
-      description_it: "Questo è un esempio di POI"
+      description_it: "Questo è un esempio di POI",
+      relevant_for: "Resident, Guest, Business"
     }];
 
     if (format === 'json') {
@@ -545,7 +760,8 @@ router.get('/template/download/:format', (req, res) => {
           { id: 'name_en', title: 'name_en' },
           { id: 'description_en', title: 'description_en' },
           { id: 'name_it', title: 'name_it' },
-          { id: 'description_it', title: 'description_it' }
+          { id: 'description_it', title: 'description_it' },
+          { id: 'relevant_for', title: 'relevant_for' }
         ]
       });
 
