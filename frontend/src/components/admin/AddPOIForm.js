@@ -138,7 +138,7 @@ const AddPOIForm = () => {
       
       // Log the full request URL
       // Use the absolute URL with the correct port:
-      const apiUrl = 'http://localhost:5000/api/pois';
+      const apiUrl = 'https://smartappkeys-1.onrender.com/api/pois';
       console.log('API endpoint:', apiUrl, 'with method: POST');
 
       // Send to backend with more detailed logging
