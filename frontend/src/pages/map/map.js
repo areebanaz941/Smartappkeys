@@ -113,7 +113,7 @@ const location = useLocation();
     const fetchPois = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch('https://smartappkeys-1.onrender.com/api/pois');
+        const response = await fetch('https://smartappkeys.onrender.com/api/pois');
         
         if (!response.ok) {
           throw new Error(`Server responded with status: ${response.status}`);
@@ -609,7 +609,7 @@ const location = useLocation();
 const fetchBikeRoutes = async () => {
   try {
     setIsBikeRoutesLoading(true);
-    const response = await fetch('https://smartappkeys-1.onrender.com/api/bike-routes');
+    const response = await fetch('https://smartappkeys.onrender.com/api/bike-routes');
     
     if (!response.ok) {
       throw new Error(`Server responded with status: ${response.status}`);
@@ -640,7 +640,7 @@ const fetchBikeRoutes = async () => {
 // Function to fetch a specific bike route
 const fetchBikeRoute = async (routeId) => {
   try {
-    const response = await fetch(`https://smartappkeys-1.onrender.com/api/bike-routes/${routeId}`);
+    const response = await fetch(`https://smartappkeys.onrender.com/api/bike-routes/${routeId}`);
     
     if (!response.ok) {
       throw new Error(`Server responded with status: ${response.status}`);
@@ -683,7 +683,7 @@ const downloadGpxFile = async (routeId) => {
     console.log('GPX file path:', route.gpxFile);
     
     // Download the GPX file
-    const response = await fetch(`https://smartappkeys-1.onrender.com/api/bike-routes/${routeId}/gpx`);
+    const response = await fetch(`https://smartappkeys.onrender.com/api/bike-routes/${routeId}/gpx`);
     
     console.log('GPX download response status:', response.status);
     
