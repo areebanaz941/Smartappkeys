@@ -5,7 +5,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const mongoose = require('mongoose');
-const BikeRoute = require('../models/BikeRoute');
+const BikeRoute = require('../models/Route');
 const gpxParser = require('gpxparser'); // You'll need to install this package
 const DOMParser = require('xmldom').DOMParser;
 const toGeoJSON = require('@mapbox/togeojson'); // You'll need to install this package
@@ -52,15 +52,20 @@ router.get('/', async (req, res) => {
       filter.difficulty = req.query.difficulty;
     }
     
+    // Filter by road type if provided
+    if (req.query.roadType) {
+      filter.roadType = req.query.roadType;
+    }
+    
     // Filter by min/max distance
     if (req.query.minDistance) {
-      filter.distance = { $gte: parseFloat(req.query.minDistance) };
+      filter['stats.totalDistance'] = { $gte: parseFloat(req.query.minDistance) };
     }
     if (req.query.maxDistance) {
-      if (filter.distance) {
-        filter.distance.$lte = parseFloat(req.query.maxDistance);
+      if (filter['stats.totalDistance']) {
+        filter['stats.totalDistance'].$lte = parseFloat(req.query.maxDistance);
       } else {
-        filter.distance = { $lte: parseFloat(req.query.maxDistance) };
+        filter['stats.totalDistance'] = { $lte: parseFloat(req.query.maxDistance) };
       }
     }
     
@@ -166,14 +171,14 @@ router.get('/:id/gpx', async (req, res) => {
     }
     
     // Check if route has a GPX file
-    if (!route.gpxFile) {
+    if (!route.fileName) {
       return res.status(404).json({
         success: false,
         message: 'No GPX file associated with this route'
       });
     }
     
-    const filePath = path.join(__dirname, '../uploads/gpx', route.gpxFile);
+    const filePath = path.join(__dirname, '../uploads/gpx', route.fileName);
     
     // Check if file exists
     if (!fs.existsSync(filePath)) {
@@ -185,7 +190,7 @@ router.get('/:id/gpx', async (req, res) => {
     
     // Set content type for GPX files
     res.setHeader('Content-Type', 'application/gpx+xml');
-    res.setHeader('Content-Disposition', `attachment; filename="${route.gpxFile}"`);
+    res.setHeader('Content-Disposition', `attachment; filename="${route.fileName}"`);
     
     // Stream the file
     const fileStream = fs.createReadStream(filePath);
@@ -216,8 +221,8 @@ router.get('/:id/path', async (req, res) => {
     // Check if route has path data
     if (!route.path || route.path.length === 0) {
       // If no path data but GPX file exists, process GPX file to generate path
-      if (route.gpxFile) {
-        const filePath = path.join(__dirname, '../uploads/gpx', route.gpxFile);
+      if (route.fileName) {
+        const filePath = path.join(__dirname, '../uploads/gpx', route.fileName);
         
         if (!fs.existsSync(filePath)) {
           return res.status(404).json({
@@ -247,9 +252,9 @@ router.get('/:id/path', async (req, res) => {
       properties: {
         name: route.name,
         difficulty: route.difficulty,
-        distance: route.distance,
-        elevationGain: route.elevationGain,
-        estimatedTime: route.estimatedTime
+        roadType: route.roadType,
+        totalDistance: route.stats.totalDistance,
+        elevationGain: route.stats.elevationGain
       },
       geometry: {
         type: 'LineString',
@@ -283,10 +288,6 @@ router.get('/:id', async (req, res) => {
         message: 'Bike route not found'
       });
     }
-    
-    // Track popularity by incrementing view count
-    route.popularity += 1;
-    await route.save();
     
     res.status(200).json({
       success: true,
@@ -347,19 +348,23 @@ router.post('/upload', upload.single('gpxFile'), async (req, res) => {
     // Create a new route with data from GPX
     const routeName = req.body.name || extractNameFromGpx(gpxContent) || req.file.originalname.replace('.gpx', '');
     
+    // Calculate difficulty based on distance and elevation gain
+    const difficulty = calculateDifficulty(stats.totalDistance, stats.elevationGain);
+    
     const newRoute = new BikeRoute({
       name: routeName,
       description: req.body.description || `Bike route imported from ${req.file.originalname}`,
-      difficulty: req.body.difficulty || calculateDifficulty(stats.distance, stats.elevationGain),
-      distance: Math.round(stats.distance * 10) / 10, // Round to 1 decimal place
-      elevationGain: Math.round(stats.elevationGain),
-      estimatedTime: req.body.estimatedTime || calculateEstimatedTime(stats.distance, stats.elevationGain),
-      startPoint: req.body.startPoint || stats.startPoint || 'From GPX',
-      endPoint: req.body.endPoint || stats.endPoint || 'From GPX',
-      tags: req.body.tags || ['imported'],
-      isPublic: req.body.hasOwnProperty('isPublic') ? req.body.isPublic : true,
-      gpxFile: req.file.filename,
-      path: path
+      fileName: req.file.filename,
+      roadType: req.body.roadType || 'mixed',
+      difficulty: req.body.difficulty || difficulty,
+      path: path,
+      stats: {
+        totalDistance: stats.totalDistance,
+        maxElevation: stats.maxElevation,
+        minElevation: stats.minElevation,
+        elevationGain: stats.elevationGain,
+        numberOfPoints: path.length
+      }
     });
     
     const savedRoute = await newRoute.save();
@@ -367,12 +372,6 @@ router.post('/upload', upload.single('gpxFile'), async (req, res) => {
     res.status(201).json({
       success: true,
       message: 'GPX file uploaded and route created successfully',
-      stats: {
-        distance: savedRoute.distance,
-        elevationGain: savedRoute.elevationGain,
-        estimatedTime: savedRoute.estimatedTime,
-        numberOfPoints: path.length
-      },
       routeId: savedRoute._id,
       data: savedRoute
     });
@@ -445,8 +444,8 @@ router.delete('/:id', async (req, res) => {
     }
     
     // Delete associated GPX file if exists
-    if (route.gpxFile) {
-      const filePath = path.join(__dirname, '../uploads/gpx', route.gpxFile);
+    if (route.fileName) {
+      const filePath = path.join(__dirname, '../uploads/gpx', route.fileName);
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
       }
@@ -474,86 +473,60 @@ async function processGpxFile(gpxContent) {
   return new Promise((resolve, reject) => {
     try {
       // Parse GPX using gpx-parser
-      gpxParser.parseGpx(gpxContent, (error, data) => {
-        if (error) {
-          return reject(new Error(`Error parsing GPX: ${error.message}`));
-        }
-        
-        if (!data || !data.tracks || data.tracks.length === 0) {
-          return reject(new Error('No track data found in GPX file'));
-        }
-        
-        const path = [];
-        let totalDistance = 0;
-        let elevationGain = 0;
-        let lastElevation = null;
-        let lastLat = null;
-        let lastLon = null;
-        let maxElevation = -Infinity;
-        let minElevation = Infinity;
-        let startPoint = null;
-        let endPoint = null;
-        
-        // Process all tracks
-        data.tracks.forEach(track => {
-          // Process track segments
-          track.segments.forEach(segment => {
-            segment.forEach((point, index) => {
-              const lon = parseFloat(point.lon);
-              const lat = parseFloat(point.lat);
-              const ele = point.ele ? parseFloat(point.ele) : 0;
-              
-              // Store first point as start point
-              if (index === 0 && !startPoint) {
-                startPoint = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
-              }
-              
-              // Update end point with each new point
-              endPoint = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
-              
-              // Calculate elevation gain
-              if (lastElevation !== null && ele > lastElevation) {
-                elevationGain += (ele - lastElevation);
-              }
-              lastElevation = ele;
-              
-              // Update min/max elevation
-              maxElevation = Math.max(maxElevation, ele);
-              minElevation = Math.min(minElevation, ele);
-              
-              // Calculate distance from last point
-              if (lastLat !== null && lastLon !== null) {
-                const dist = calculateDistance(lastLat, lastLon, lat, lon);
-                totalDistance += dist;
-              }
-              lastLat = lat;
-              lastLon = lon;
-              
-              // Add point to path [longitude, latitude, elevation]
-              path.push([lon, lat, ele]);
-            });
-          });
-        });
-        
-        // Convert distance to kilometers
-        totalDistance = totalDistance / 1000;
-        
-        // Calculate estimated time (minutes) based on distance and elevation gain
-        const estimatedTime = calculateEstimatedTime(totalDistance, elevationGain);
-        
-        resolve({
-          path,
-          stats: {
-            distance: totalDistance,
-            elevationGain,
-            maxElevation,
-            minElevation,
-            estimatedTime,
-            numberOfPoints: path.length,
-            startPoint,
-            endPoint
+      const gpx = new gpxParser();
+      gpx.parse(gpxContent);
+      
+      if (!gpx.tracks || gpx.tracks.length === 0) {
+        return reject(new Error('No track data found in GPX file'));
+      }
+      
+      const path = [];
+      let totalDistance = 0;
+      let elevationGain = 0;
+      let lastElevation = null;
+      let maxElevation = -Infinity;
+      let minElevation = Infinity;
+      
+      // Process all tracks
+      gpx.tracks.forEach(track => {
+        track.points.forEach((point, index) => {
+          const lon = point.lon;
+          const lat = point.lat;
+          const ele = point.ele || 0;
+          
+          // Calculate elevation gain
+          if (lastElevation !== null && ele > lastElevation) {
+            elevationGain += (ele - lastElevation);
+          }
+          lastElevation = ele;
+          
+          // Update min/max elevation
+          maxElevation = Math.max(maxElevation, ele);
+          minElevation = Math.min(minElevation, ele || 0);
+          
+          // Add point to path [longitude, latitude, elevation]
+          if (ele) {
+            path.push([lon, lat, ele]);
+          } else {
+            path.push([lon, lat]);
           }
         });
+      });
+      
+      // Calculate total distance
+      totalDistance = gpx.tracks.reduce((acc, track) => {
+        return acc + track.distance.total;
+      }, 0) / 1000; // Convert to kilometers
+      
+      resolve({
+        path,
+        stats: {
+          totalDistance,
+          elevationGain,
+          maxElevation: isFinite(maxElevation) ? maxElevation : 0,
+          minElevation: isFinite(minElevation) ? minElevation : 0,
+          numberOfPoints: path.length
+        }
       });
     } catch (error) {
       reject(error);
@@ -604,23 +577,6 @@ function extractNameFromGpx(gpxContent) {
   }
 }
 
-// Calculate distance between two points using Haversine formula
-function calculateDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371; // Earth radius in kilometers
-  const dLat = toRadians(lat2 - lat1);
-  const dLon = toRadians(lon2 - lon1);
-  const a = 
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) * 
-    Math.sin(dLon/2) * Math.sin(dLon/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  return R * c; // Distance in kilometers
-}
-
-function toRadians(degrees) {
-  return degrees * Math.PI / 180;
-}
-
 // Helper function to calculate difficulty based on distance and elevation gain
 function calculateDifficulty(distance, elevationGain) {
   // Simple algorithm to determine difficulty
@@ -633,19 +589,6 @@ function calculateDifficulty(distance, elevationGain) {
   } else {
     return 'hard';
   }
-}
-
-// Helper function to calculate estimated time based on distance and elevation gain
-function calculateEstimatedTime(distance, elevationGain) {
-  // Base time calculation in minutes
-  // Assume average cycling speed of 15 km/h on flat terrain
-  const baseTime = (distance / 15) * 60;
-  
-  // Add time for elevation gain (approximately 1 minute per 10m of climbing)
-  const climbingTime = elevationGain / 10;
-  
-  // Total estimated time
-  return Math.max(1, Math.round(baseTime + climbingTime));
 }
 
 module.exports = router;

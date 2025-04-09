@@ -20,9 +20,13 @@ import BikeWalkNavigation from './components/admin/BikeWalkNavigation';
 import RouteManagementPage from './components/admin/RouteManagementPage';
 import NavigationAnalyticsPage from './components/admin/NavigationAnalyticsPage';
 import NavigationSettingsPage from './components/admin/NavigationSettingsPage';
-
+import IntegratedMapPage from './pages/map/IntegratedMapPage';
 import BikeRouteUpload from './components/admin/GpxUploadForm';
 import BikeRouteManagement from './components/admin/BikeRouteManagement';
+import GpxTrackMap from './pages/map/GpxMapViewer';
+import { PartnerSurveyRedirect, UserSurveyRedirect } from './pages';
+import ProtectedRoute from './pages/ProtectedRoute';
+
 function App() {
   return (
     <BrowserRouter>
@@ -34,10 +38,23 @@ function App() {
           <Route path="/admin/poi/new" element={<POIManagementPage initialView="add" />} />
           <Route path="/admin/poi/bulk-upload" element={<BulkUploadPage />} />
           <Route path="/admin/poi/analytics" element={<POIAnalyticsPage />} />
-          <Route path="/map" element={<MapPage/>} />
+          <Route path="/admin/poi/map" element={<MapPage/>} />
           <Route path="/resident-dashboard" element={<ResidentDashboard/>} />
           <Route path="/tourist-dashboard" element={<TouristDashboard/>} />
           <Route path="/business-dashboard" element={<BusinessDashboard/>} />
+          <Route path="/gpx-track-map" element={<GpxTrackMap/>} />
+
+          {/* Survey Redirect Pages */}
+          <Route path="/partner-survey" element={
+            <ProtectedRoute>
+              <PartnerSurveyRedirect />
+            </ProtectedRoute>
+          } />
+          <Route path="/user-survey" element={
+            <ProtectedRoute>
+              <UserSurveyRedirect />
+            </ProtectedRoute>
+          } />
 
           {/* Bike Route Management Routes */}
           <Route path="/admin/bike-routes" element={<BikeRouteManagement />} />
@@ -45,11 +62,16 @@ function App() {
           <Route path="/admin/bike-routes/new" element={<BikeRouteManagement mode="create" />} />
           <Route path="/admin/bike-routes/edit/:id" element={<BikeRouteManagement mode="edit" />} />
           <Route path="/admin/bike-routes/statistics" element={<BikeRouteManagement mode="statistics" />} />
-          {/* Add more routes as needed */}
-
+          <Route path="/admin/bike-routes/map" element={<GpxTrackMap/>} />
+          
+          {/* New integrated map with different parameter options */}
+          <Route path="/explorer" element={<IntegratedMapPage />} />
+          <Route path="/explorer/route/:id" element={<IntegratedMapPage />} />
+          <Route path="/explorer/poi/:id" element={<IntegratedMapPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
   );
 }
+
 export default App;

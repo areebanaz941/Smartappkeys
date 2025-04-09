@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { MapPin, ChevronLeft, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import Header from './Header';
+import BusinessTypeStep from './BusinessTypeStep';
 
 const AuthPage = ({ initialView = 'login', onClose }) => {
   const [showRegistration, setShowRegistration] = useState(initialView === 'signup');
@@ -25,7 +27,7 @@ const AuthPage = ({ initialView = 'login', onClose }) => {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-md relative overflow-hidden">
+    <div className="bg-white rounded-2xl shadow-md relative overflow-hidden min-h-[80vh] sm:min-h-screen md:min-h-[600px] md:h-[calc(100vh-100px)] max-h-screen flex flex-col">
       {/* Close button */}
       {onClose && (
         <button 
@@ -37,7 +39,7 @@ const AuthPage = ({ initialView = 'login', onClose }) => {
         </button>
       )}
       
-      <div className="w-full">
+      <div className="w-full flex-grow overflow-auto">
         {showLogin && (
           <LoginPage 
             onSignUpClick={handleSignUpClick}
@@ -79,30 +81,29 @@ const LoginPage = ({ onClose, onSignUpClick, registrationSuccess }) => {
   };
 
   // Navigate to appropriate dashboard based on user type
-  // Navigate to appropriate dashboard based on user type
-const navigateToUserDashboard = (userType) => {
-  console.log("Navigating to dashboard for user type:", userType);
+  const navigateToUserDashboard = (userType) => {
+    console.log("Navigating to dashboard for user type:", userType);
+    
+    // Convert to lowercase and trim to handle case differences and whitespace
+    const type = userType?.toLowerCase().trim();
+    
+    switch(type) {
+      case 'resident':
+        navigate('/explorer');
+        break;
+      case 'tourist':
+      case 'guest':
+        navigate('/explorer');
+        break;
+      case 'partner': // Changed from 'business' to 'partner'
+        navigate('/business-dashboard');
+        break;
+      default:
+        console.warn('Unknown user type:', userType, 'Redirecting to default dashboard');
+        navigate('/dashboard');
+    }
+  };
   
-  // Convert to lowercase and trim to handle case differences and whitespace
-  const type = userType?.toLowerCase().trim();
-  
-  switch(type) {
-    case 'resident':
-      navigate('/resident-dashboard');
-      break;
-    case 'tourist':
-    case 'guest':
-      navigate('/tourist-dashboard');
-      break;
-    case 'business':
-      navigate('/business-dashboard');
-      break;
-    default:
-      console.warn('Unknown user type:', userType, 'Redirecting to default dashboard');
-      navigate('/dashboard');
-  }
-};
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -169,44 +170,44 @@ const navigateToUserDashboard = (userType) => {
 
   return (
     <div className="bg-white rounded-2xl shadow-md overflow-hidden">
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <div className="text-center mb-4">
           <div className="flex justify-center items-center mb-2">
-            <MapPin className="h-8 w-8 text-[#22c55e] mr-1" />
-            <span className="text-[#22c55e] font-bold text-xl">Smart Travel</span>
+            <MapPin className="h-6 w-6 sm:h-8 sm:w-8 text-[#22c55e] mr-1" />
+            <span className="text-[#22c55e] font-bold text-lg sm:text-xl">Smart Travel</span>
           </div>
-          <h2 className="text-2xl font-bold text-[#1f2937]">Log In</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-[#1f2937]">Log In</h2>
         </div>
         
         {/* Success message after registration */}
         {registrationSuccess && (
-          <div className="bg-green-100 border border-green-300 text-green-700 px-4 py-2 rounded-md mb-4 text-sm">
+          <div className="bg-green-100 border border-green-300 text-green-700 px-4 py-2 rounded-md mb-4 text-xs sm:text-sm">
             Account created successfully! Please log in with your credentials.
           </div>
         )}
         
         {/* Error message */}
         {error && (
-          <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-2 rounded-md mb-4 text-sm">
+          <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-2 rounded-md mb-4 text-xs sm:text-sm">
             {error}
           </div>
         )}
         
         {/* Account not found message */}
         {accountNotFound && (
-          <div className="bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-2 rounded-md mb-4 text-sm">
+          <div className="bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-2 rounded-md mb-4 text-xs sm:text-sm">
             No account found with this email address. Please create an account first.
           </div>
         )}
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           <div>
             <input
               id="email"
               name="email"
               type="email"
               required
-              className="w-full px-4 py-2 border border-[#d1d5db] rounded-full focus:outline-none focus:ring-2 focus:ring-[#22c55e]"
+              className="w-full px-3 sm:px-4 py-2 border border-[#d1d5db] rounded-full focus:outline-none focus:ring-2 focus:ring-[#22c55e] text-sm"
               placeholder="Email address"
               value={formData.email}
               onChange={handleChange}
@@ -220,7 +221,7 @@ const navigateToUserDashboard = (userType) => {
               name="password"
               type="password"
               required
-              className="w-full px-4 py-2 border border-[#d1d5db] rounded-full focus:outline-none focus:ring-2 focus:ring-[#22c55e]"
+              className="w-full px-3 sm:px-4 py-2 border border-[#d1d5db] rounded-full focus:outline-none focus:ring-2 focus:ring-[#22c55e] text-sm"
               placeholder="Password"
               value={formData.password}
               onChange={handleChange}
@@ -228,13 +229,13 @@ const navigateToUserDashboard = (userType) => {
             />
           </div>
           
-          <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center justify-between text-xs sm:text-sm">
             <div className="flex items-center">
               <input
                 id="remember-me"
                 name="rememberMe"
                 type="checkbox"
-                className="h-4 w-4 text-[#22c55e] rounded focus:ring-[#22c55e]"
+                className="h-3 w-3 sm:h-4 sm:w-4 text-[#22c55e] rounded focus:ring-[#22c55e]"
                 checked={formData.rememberMe}
                 onChange={handleChange}
                 disabled={isLoading}
@@ -268,7 +269,7 @@ const navigateToUserDashboard = (userType) => {
             </button>
           )}
           
-          <div className="text-center text-sm text-[#6b7280] my-3 flex items-center justify-center">
+          <div className="text-center text-xs sm:text-sm text-[#6b7280] my-3 flex items-center justify-center">
             <div className="flex-grow border-t border-[#d1d5db] mr-4"></div>
             <span>Or continue with</span>
             <div className="flex-grow border-t border-[#d1d5db] ml-4"></div>
@@ -277,10 +278,10 @@ const navigateToUserDashboard = (userType) => {
           <div className="space-y-2">
             <button
               type="button"
-              className="w-full flex justify-center items-center py-2 border border-[#d1d5db] rounded-full text-[#6b7280] hover:bg-gray-50"
+              className="w-full flex justify-center items-center py-2 border border-[#d1d5db] rounded-full text-[#6b7280] hover:bg-gray-50 text-xs sm:text-sm"
               disabled={isLoading}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" className="mr-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" className="mr-2">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                 <path d="M12 23c2.97 0 5.46-1 7.28-2.69l-3.57-2.77c-.99.69-2.26 1.1-3.71 1.1-2.87 0-5.3-1.94-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
                 <path d="M5.84 14.11c-.22-.69-.35-1.43-.35-2.11s.13-1.42.35-2.11V7.05H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.95l2.66-2.84z" fill="#FBBC05"/>
@@ -290,17 +291,17 @@ const navigateToUserDashboard = (userType) => {
             </button>
             <button
               type="button"
-              className="w-full flex justify-center items-center py-2 border border-[#d1d5db] rounded-full text-[#6b7280] hover:bg-gray-50"
+              className="w-full flex justify-center items-center py-2 border border-[#d1d5db] rounded-full text-[#6b7280] hover:bg-gray-50 text-xs sm:text-sm"
               disabled={isLoading}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" className="mr-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" className="mr-2">
                 <path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z" fill="#1877F2"/>
               </svg>
               Continue with Facebook
             </button>
           </div>
           
-          <div className="text-center text-sm text-[#6b7280] mt-3">
+          <div className="text-center text-xs sm:text-sm text-[#6b7280] mt-3">
             Don't have an account? 
             <button 
               type="button"
@@ -317,12 +318,14 @@ const navigateToUserDashboard = (userType) => {
   );
 };
 
-// Step 6: Interests Selection (modified to handle registration completion and redirect)
-const InterestsStep = ({ data, updateData, onNext, onPrev, onRegistrationSuccess }) => {
+// Step 6: Interests Selection with Survey Link for non-partners
+const InterestsStep = ({ data, updateData, onPrev, onRegistrationSuccess }) => {
   const [selectedInterests, setSelectedInterests] = useState(data.interests || []);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [registrationCompleted, setRegistrationCompleted] = useState(false);
+  const [showSurvey, setShowSurvey] = useState(false);
+  const navigate = useNavigate();
 
   const interestOptions = [
     'Local Cuisine', 'Street Food Tours', 'Coffee & Cafes', 'Museums & Galleries',
@@ -376,15 +379,20 @@ const InterestsStep = ({ data, updateData, onNext, onPrev, onRegistrationSuccess
         console.log("Registration successful:", responseData);
         setRegistrationCompleted(true);
         
-        // Wait 2 seconds before redirecting to login
-        setTimeout(() => {
-          if (onRegistrationSuccess) {
-            onRegistrationSuccess();
-          }
-        }, 2000);
+        // Store token if provided in the response
+        if (responseData.token) {
+          localStorage.setItem('token', responseData.token);
+        }
+        
+        // Show survey option for resident/tourist
+        setShowSurvey(true);
       } else {
         console.error("Registration failed:", responseData);
-        setError(responseData.message || 'Registration failed');
+        if (responseData.missingFields && responseData.missingFields.length > 0) {
+          setError(`Missing required fields: ${responseData.missingFields.join(', ')}`);
+        } else {
+          setError(responseData.message || 'Registration failed');
+        }
       }
     } catch (error) {
       console.error('Registration error:', error);
@@ -392,6 +400,16 @@ const InterestsStep = ({ data, updateData, onNext, onPrev, onRegistrationSuccess
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSurveyComplete = () => {
+    // After survey complete, redirect to explorer
+    navigate('/explorer');
+  };
+
+  const handleSkipSurvey = () => {
+    // Skip survey and go directly to explorer
+    navigate('/explorer');
   };
 
   return (
@@ -451,6 +469,33 @@ const InterestsStep = ({ data, updateData, onNext, onPrev, onRegistrationSuccess
             </button>
           </form>
         </>
+      ) : showSurvey ? (
+        <div className="text-center py-10">
+          <div className="bg-green-100 border border-green-300 text-green-700 px-4 py-4 rounded-md mb-6 text-sm">
+            <p className="font-semibold mb-2">Account created successfully!</p>
+            <p>Take a quick survey to help us personalize your experience</p>
+          </div>
+          
+          <div className="space-y-4">
+            <a
+              href={data.userType === 'resident' ? 'https://form.jotform.com/resident' : 'https://form.jotform.com/guest'}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full bg-[#22c55e] text-white py-2 rounded-full font-semibold hover:bg-[#16a34a] transition-colors text-center"
+              onClick={handleSurveyComplete}
+            >
+              Take Quick Survey
+            </a>
+            
+            <button
+              type="button"
+              onClick={handleSkipSurvey}
+              className="block w-full bg-[#6b7280] text-white py-2 rounded-full font-semibold hover:bg-[#4b5563] transition-colors"
+            >
+              Skip for Now
+            </button>
+          </div>
+        </div>
       ) : (
         <div className="text-center py-10">
           <div className="bg-green-100 border border-green-300 text-green-700 px-4 py-4 rounded-md mb-6 text-sm">
@@ -469,8 +514,10 @@ const InterestsStep = ({ data, updateData, onNext, onPrev, onRegistrationSuccess
   );
 };
 
+
 // Main Registration Flow Component
-const RegistrationFlow = ({ onLoginClick, onRegistrationSuccess }) => {
+const RegistrationFlow = ({ onLoginClick, onClose, onRegistrationSuccess }) => {
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [registrationData, setRegistrationData] = useState({
@@ -482,6 +529,8 @@ const RegistrationFlow = ({ onLoginClick, onRegistrationSuccess }) => {
     confirmPassword: '',
     otp: '',
     userType: '',
+    displayUserType: '', // UI-friendly user type (shows "partner" while backend gets "business")
+    businessType: '',
     interests: []
   });
 
@@ -494,6 +543,22 @@ const RegistrationFlow = ({ onLoginClick, onRegistrationSuccess }) => {
 
   const nextStep = () => setStep(prev => prev + 1);
   const prevStep = () => setStep(prev => prev - 1);
+
+  // Handle successful registration based on user type
+  const handleRegistrationSuccess = (userType) => {
+    // Store displayUserType to maintain UI consistency
+    const displayType = registrationData.displayUserType || userType;
+    
+    if (displayType === 'partner') {
+      // For partners, redirect to partner survey
+      navigate('/partner-survey');
+    } else {
+      // For other users, show the standard registration success
+      if (onRegistrationSuccess) {
+        onRegistrationSuccess();
+      }
+    }
+  };
 
   const renderStep = () => {
     switch(step) {
@@ -543,15 +608,26 @@ const RegistrationFlow = ({ onLoginClick, onRegistrationSuccess }) => {
           />
         );
       case 6:
-        return (
-          <InterestsStep 
-            data={registrationData} 
-            updateData={updateRegistrationData} 
-            onNext={nextStep} 
-            onPrev={prevStep}
-            onRegistrationSuccess={onRegistrationSuccess}
-          />
-        );
+        // Check display user type to maintain UI consistency
+        if (registrationData.displayUserType === 'partner') {
+          return (
+            <BusinessTypeStep 
+              data={registrationData} 
+              updateData={updateRegistrationData} 
+              onPrev={prevStep}
+              onRegistrationSuccess={handleRegistrationSuccess}
+            />
+          );
+        } else {
+          return (
+            <InterestsStep 
+              data={registrationData} 
+              updateData={updateRegistrationData} 
+              onPrev={prevStep}
+              onRegistrationSuccess={handleRegistrationSuccess}
+            />
+          );
+        }
       default:
         return null;
     }
@@ -593,7 +669,6 @@ const RegistrationFlow = ({ onLoginClick, onRegistrationSuccess }) => {
   );
 };
 
-// Other step components remain unchanged
 // Step 1: Name Input
 const NameStep = ({ data, updateData, onNext, onLoginClick }) => {
   const [firstName, setFirstName] = useState(data.firstName);
@@ -608,47 +683,51 @@ const NameStep = ({ data, updateData, onNext, onLoginClick }) => {
   };
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold text-[#1f2937] mb-4 text-center">
-        Registration For Customer
-      </h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <input
-            type="text"
-            placeholder="First Name"
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-            required
-            className="w-full px-4 py-2 border border-[#d1d5db] rounded-full focus:outline-none focus:ring-2 focus:ring-[#22c55e]"
-          />
-          <input
-            type="text"
-            placeholder="Last Name"
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-            required
-            className="w-full px-4 py-2 border border-[#d1d5db] rounded-full focus:outline-none focus:ring-2 focus:ring-[#22c55e]"
-          />
-        </div>
-        <button
-          type="submit"
-          className="w-full bg-[#22c55e] text-white py-2 rounded-full font-semibold hover:bg-[#16a34a] transition-colors"
-        >
-          Create Account
-        </button>
-        
-        <div className="text-center text-sm text-[#6b7280] mt-3">
-          Already have an account? 
-          <button 
-            type="button" 
-            onClick={onLoginClick} 
-            className="ml-2 text-[#22c55e] hover:underline"
+    <div className="px-4 py-4 sm:py-6 md:p-8 h-full flex flex-col justify-between">
+      <div>
+        <h2 className="text-xl sm:text-2xl font-bold text-[#1f2937] mb-4 text-center">
+          Registration For Customer
+        </h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+            <input
+              type="text"
+              placeholder="First Name"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              required
+              className="w-full px-3 sm:px-4 py-2 border border-[#d1d5db] rounded-full focus:outline-none focus:ring-2 focus:ring-[#22c55e] text-sm"
+            />
+            <input
+              type="text"
+              placeholder="Last Name"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              required
+              className="w-full px-3 sm:px-4 py-2 border border-[#d1d5db] rounded-full focus:outline-none focus:ring-2 focus:ring-[#22c55e] text-sm"
+            />
+          </div>
+          <div className="item-bottom">
+          <button
+            type="submit"
+            className="w-full bg-[#22c55e] text-white py-2 rounded-full font-semibold hover:bg-[#16a34a] transition-colors"
           >
-            Sign In
+            Create Account
           </button>
-        </div>
-      </form>
+          </div>
+        </form>
+      </div>
+      
+      <div className="text-center text-xs sm:text-sm text-[#6b7280] mt-4">
+        Already have an account? 
+        <button 
+          type="button" 
+          onClick={onLoginClick} 
+          className="ml-2 text-[#22c55e] hover:underline"
+        >
+          Sign In
+        </button>
+      </div>
     </div>
   );
 };
@@ -666,7 +745,7 @@ const PhoneNumberStep = ({ data, updateData, onNext, onPrev }) => {
   };
 
   return (
-    <div>
+    <div className="px-4 py-4 sm:py-6">
       <div className="flex items-center mb-4">
         <button 
           onClick={onPrev} 
@@ -674,11 +753,11 @@ const PhoneNumberStep = ({ data, updateData, onNext, onPrev }) => {
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
-        <h2 className="text-2xl font-bold text-[#1f2937]">
+        <h2 className="text-xl sm:text-2xl font-bold text-[#1f2937]">
           OTP Verification
         </h2>
       </div>
-      <p className="text-[#6b7280] mb-4 text-sm">
+      <p className="text-[#6b7280] mb-4 text-xs sm:text-sm">
         We will send you an One Time Password on this mobile number
       </p>
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -688,7 +767,7 @@ const PhoneNumberStep = ({ data, updateData, onNext, onPrev }) => {
           value={phoneNumber}
           onChange={(e) => setPhoneNumber(e.target.value)}
           required
-          className="w-full px-4 py-2 border border-[#d1d5db] rounded-full focus:outline-none focus:ring-2 focus:ring-[#22c55e]"
+          className="w-full px-3 sm:px-4 py-2 border border-[#d1d5db] rounded-full focus:outline-none focus:ring-2 focus:ring-[#22c55e] text-sm"
         />
         <button
           type="submit"
@@ -724,7 +803,7 @@ const EmailPasswordStep = ({ data, updateData, onNext, onPrev }) => {
   };
 
   return (
-    <div>
+    <div className="px-4 py-4 sm:py-6">
       <div className="flex items-center mb-4">
         <button 
           onClick={onPrev} 
@@ -732,13 +811,13 @@ const EmailPasswordStep = ({ data, updateData, onNext, onPrev }) => {
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
-        <h2 className="text-2xl font-bold text-[#1f2937]">
+        <h2 className="text-xl sm:text-2xl font-bold text-[#1f2937]">
           Email & Password
         </h2>
       </div>
       
       {error && (
-        <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-2 rounded-md mb-4 text-sm">
+        <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-2 rounded-md mb-4 text-xs sm:text-sm">
           {error}
         </div>
       )}
@@ -750,7 +829,7 @@ const EmailPasswordStep = ({ data, updateData, onNext, onPrev }) => {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="w-full px-4 py-2 border border-[#d1d5db] rounded-full focus:outline-none focus:ring-2 focus:ring-[#22c55e]"
+          className="w-full px-3 sm:px-4 py-2 border border-[#d1d5db] rounded-full focus:outline-none focus:ring-2 focus:ring-[#22c55e] text-sm"
         />
         <input
           type="password"
@@ -758,7 +837,7 @@ const EmailPasswordStep = ({ data, updateData, onNext, onPrev }) => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          className="w-full px-4 py-2 border border-[#d1d5db] rounded-full focus:outline-none focus:ring-2 focus:ring-[#22c55e]"
+          className="w-full px-3 sm:px-4 py-2 border border-[#d1d5db] rounded-full focus:outline-none focus:ring-2 focus:ring-[#22c55e] text-sm"
         />
         <input
           type="password"
@@ -766,7 +845,7 @@ const EmailPasswordStep = ({ data, updateData, onNext, onPrev }) => {
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
-          className="w-full px-4 py-2 border border-[#d1d5db] rounded-full focus:outline-none focus:ring-2 focus:ring-[#22c55e]"
+          className="w-full px-3 sm:px-4 py-2 border border-[#d1d5db] rounded-full focus:outline-none focus:ring-2 focus:ring-[#22c55e] text-sm"
         />
         <button
           type="submit"
@@ -792,7 +871,7 @@ const OTPVerificationStep = ({ data, updateData, onNext, onPrev }) => {
   };
 
   return (
-    <div>
+    <div className="px-4 py-4 sm:py-6">
       <div className="flex items-center mb-4">
         <button 
           onClick={onPrev} 
@@ -800,14 +879,14 @@ const OTPVerificationStep = ({ data, updateData, onNext, onPrev }) => {
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
-        <h2 className="text-2xl font-bold text-[#1f2937]">
+        <h2 className="text-xl sm:text-2xl font-bold text-[#1f2937]">
           Verification
         </h2>
       </div>
-      <p className="text-[#6b7280] mb-3 text-sm">
+      <p className="text-[#6b7280] mb-3 text-xs sm:text-sm">
         We need to register your phone number before getting started
       </p>
-      <p className="text-[#6b7280] mb-3 text-sm">
+      <p className="text-[#6b7280] mb-3 text-xs sm:text-sm">
         Send to (+1) {data.phoneNumber || '8545678920'}
       </p>
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -817,13 +896,13 @@ const OTPVerificationStep = ({ data, updateData, onNext, onPrev }) => {
               key={index}
               type="text"
               maxLength="1"
-              className="w-10 h-10 text-center border border-[#d1d5db] rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-[#22c55e]"
+              className="w-8 h-8 sm:w-10 sm:h-10 text-center border border-[#d1d5db] rounded-lg text-sm sm:text-lg focus:outline-none focus:ring-2 focus:ring-[#22c55e]"
               value={digit}
               readOnly
             />
           ))}
         </div>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9, 'x', 0, '⌫'].map((num) => (
             <button
               key={num}
@@ -836,7 +915,7 @@ const OTPVerificationStep = ({ data, updateData, onNext, onPrev }) => {
                   setOtp(prev => prev + num);
                 }
               }}
-              className="bg-gray-100 py-2 rounded-lg hover:bg-gray-200 text-sm"
+              className="bg-gray-100 py-2 rounded-lg hover:bg-gray-200 text-xs sm:text-sm"
             >
               {num}
             </button>
@@ -854,6 +933,7 @@ const OTPVerificationStep = ({ data, updateData, onNext, onPrev }) => {
 };
 
 // Step 5: User Type Selection
+// Updated UserTypeStep component to match backend user type requirements
 const UserTypeStep = ({ data, updateData, onNext, onPrev }) => {
   const [userType, setUserType] = useState(data.userType);
   const [error, setError] = useState(null);
@@ -867,12 +947,20 @@ const UserTypeStep = ({ data, updateData, onNext, onPrev }) => {
       return;
     }
     
-    updateData({ userType });
+    // Store the UI-friendly version as 'displayUserType' - this preserves 'partner' for the UI
+    // But use the backend-compatible version in 'userType'
+    const backendUserType = userType === 'partner' ? 'business' : userType;
+    
+    updateData({ 
+      userType: backendUserType, 
+      displayUserType: userType // Save display version for UI consistency
+    });
+    
     onNext();
   };
 
   return (
-    <div>
+    <div className="h-full">
       <div className="flex items-center mb-4">
         <button 
           onClick={onPrev} 
@@ -907,7 +995,7 @@ const UserTypeStep = ({ data, updateData, onNext, onPrev }) => {
           >
             <div className="text-center">
               <img 
-                src="/api/placeholder/80/80" 
+                src="/resident.png" 
                 alt="Resident" 
                 className="mx-auto mb-2"
               />
@@ -926,7 +1014,7 @@ const UserTypeStep = ({ data, updateData, onNext, onPrev }) => {
           >
             <div className="text-center">
               <img 
-                src="/api/placeholder/80/80" 
+                src="/tourist.png" 
                 alt="Tourist" 
                 className="mx-auto mb-2"
               />
@@ -936,20 +1024,20 @@ const UserTypeStep = ({ data, updateData, onNext, onPrev }) => {
           </button>
           <button
             type="button"
-            onClick={() => setUserType('business')}
+            onClick={() => setUserType('partner')}
             className={`py-4 border rounded-xl ${
-              userType === 'business' 
+              userType === 'partner' 
                 ? 'border-[#22c55e] bg-[#22c55e]/10' 
                 : 'border-[#d1d5db]'
             }`}
           >
             <div className="text-center">
               <img 
-                src="/api/placeholder/80/80" 
-                alt="Business" 
+                src="/Business.png" 
+                alt="Partner" 
                 className="mx-auto mb-2"
               />
-              <h3 className="font-semibold text-sm text-[#1f2937]">Business</h3>
+              <h3 className="font-semibold text-sm text-[#1f2937]">Partner</h3>
               <p className="text-[#6b7280] text-xs">Managing services</p>
             </div>
           </button>
