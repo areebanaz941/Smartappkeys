@@ -21,7 +21,8 @@ import {
   Compass,
   ChevronDown,
   ChevronUp,
-  Flag
+  Flag,
+  Home
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import mapboxgl from 'mapbox-gl';
@@ -32,13 +33,16 @@ import TurnByTurnNavigation from './TurnByTurnNavigation';
 // Set your access token
 mapboxgl.accessToken = 'pk.eyJ1IjoibTJvdGVjaCIsImEiOiJjbTczbzU4aWQwMWdmMmpzY3N4ejJ3czlnIn0.fLDR4uG8kD8-g_IDM8ZPdQ';
 
-const IntegratedMap = () => {
+const IntegratedMap = ({ initialRouteId, initialPoiId, initialMode }) => {
   const mapContainer = useRef(null);
   const [map, setMap] = useState(null);
   
   // Sidebar control
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [activeSidebarTab, setActiveSidebarTab] = useState('pois'); // 'pois', 'routes', 'planner'
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Default to closed on mobile
+  const [activeSidebarTab, setActiveSidebarTab] = useState(initialMode || 'pois'); // 'pois', 'routes', 'planner'
+  
+  // Mobile view state
+  const [isMobileView, setIsMobileView] = useState(false);
   
   // Loading states
   const [isLoading, setIsLoading] = useState(true);
@@ -77,6 +81,35 @@ const IntegratedMap = () => {
   // Map layers visibility control
   const [showPois, setShowPois] = useState(true);
   const [showBikeRoutes, setShowBikeRoutes] = useState(true);
+  const [mapListView, setMapListView] = useState('map'); // 'map' or 'list'
+
+
+  const poiCategoryColors = {
+    'business': '#3b82f6',     // Blue
+    'cultural': '#8B4513',     // Brown
+    'landscape': '#22c55e',    // Green
+    'religious': '#8B5CF6',    // Purple
+    'landscape_religious': '#1E5631', // Dark Green
+    'default': '#22c55e'       // Default Green
+  };
+  
+  // Check if in mobile view
+  useEffect(() => {
+    const checkMobileView = () => {
+      setIsMobileView(window.innerWidth < 768);
+    };
+    
+    // Initial check
+    checkMobileView();
+    
+    // Add event listener for window resize
+    window.addEventListener('resize', checkMobileView);
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', checkMobileView);
+    };
+  }, []);
   
   // Collection of refs for cleanup
   const markersRef = useRef([]);
@@ -102,69 +135,7 @@ const IntegratedMap = () => {
   // Track click time for double-click detection
   const lastClickTime = useRef(0);
   const clickTimeout = useRef(null);
-  
-  // Fetch POIs from API
-  useEffect(() => {
-    const fetchPois = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const response = await fetch('http://localhost:5000/api/pois');
-        
-        if (!response.ok) {
-          throw new Error(`Server responded with status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        if (!data.success) {
-          throw new Error(data.message || 'Failed to fetch POIs');
-        }
-        
-        setPois(data.data || []);
-        console.log('POIs loaded:', data.data?.length || 0);
-      } catch (err) {
-        console.error('Error fetching POIs:', err);
-        setError(`Failed to load POIs: ${err.message}`);
-      } finally {
-        setIsLoading(false);
-      }
-    };
 
-    fetchPois();
-  }, []);
-  
-  // Fetch bike routes from API
-  useEffect(() => {
-    const fetchBikeRoutes = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const response = await fetch('http://localhost:5000/api/bike-routes');
-        
-        if (!response.ok) {
-          throw new Error(`Server responded with status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        if (!data.success) {
-          throw new Error(data.message || 'Failed to fetch bike routes');
-        }
-        
-        setBikeRoutes(data.data || []);
-        console.log('Bike routes loaded:', data.data?.length || 0);
-      } catch (err) {
-        console.error('Error fetching bike routes:', err);
-        setError(`Failed to load bike routes: ${err.message}`);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchBikeRoutes();
-  }, []);
-  
   // Initialize Mapbox GL map
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -252,6 +223,100 @@ const IntegratedMap = () => {
     }
   }, []);
   
+  // Fetch POIs from API
+  useEffect(() => {
+    const fetchPois = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const response = await fetch('http://localhost:5000/api/pois');
+        
+        if (!response.ok) {
+          throw new Error(`Server responded with status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+          throw new Error(data.message || 'Failed to fetch POIs');
+        }
+        
+        setPois(data.data || []);
+        console.log('POIs loaded:', data.data?.length || 0);
+      } catch (err) {
+        console.error('Error fetching POIs:', err);
+        setError(`Failed to load POIs: ${err.message}`);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPois();
+  }, []);
+  
+  // Fetch bike routes from API
+  useEffect(() => {
+    const fetchBikeRoutes = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const response = await fetch('http://localhost:5000/api/bike-routes');
+        
+        if (!response.ok) {
+          throw new Error(`Server responded with status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+          throw new Error(data.message || 'Failed to fetch bike routes');
+        }
+        
+        setBikeRoutes(data.data || []);
+        console.log('Bike routes loaded:', data.data?.length || 0);
+      } catch (err) {
+        console.error('Error fetching bike routes:', err);
+        setError(`Failed to load bike routes: ${err.message}`);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBikeRoutes();
+  }, []);
+  
+  // Handle initial route or POI loading
+  useEffect(() => {
+    if (!map || !bikeRoutes.length || !pois.length) return;
+    
+    if (initialRouteId) {
+      const route = bikeRoutes.find(r => r._id === initialRouteId);
+      if (route) {
+        fetchAndDisplayGpx(initialRouteId);
+      }
+    }
+    
+    if (initialPoiId) {
+      const poi = pois.find(p => p._id === initialPoiId);
+      if (poi) {
+        setSelectedPlace(poi);
+        const coords = getMapboxCoords(poi);
+        if (coords) {
+          map.flyTo({
+            center: coords,
+            zoom: 15,
+            essential: true
+          });
+        }
+      }
+    }
+    
+    // Set initial mode if provided
+    if (initialMode) {
+      setActiveSidebarTab(initialMode);
+    }
+  }, [map, bikeRoutes, pois, initialRouteId, initialPoiId, initialMode]);
+  
   // Add POI markers to map when map is ready and POIs are loaded
   useEffect(() => {
     if (!map || !pois.length) return;
@@ -311,18 +376,24 @@ const IntegratedMap = () => {
       return null;
     }
     
+    // Determine marker color based on category
+    const poiColor = poiCategoryColors[poi.category] || poiCategoryColors.default;
+    
     // Create custom HTML element for marker
     const el = document.createElement('div');
     el.className = 'poi-marker marker';
     el.style.backgroundImage = `url('/pointer.png')`;
-    el.style.width = '66px';
-    el.style.height = '66px';
+    el.style.width = '77px';
+    el.style.height = '77px';
     el.style.backgroundSize = 'contain';
     el.style.backgroundRepeat = 'no-repeat';
     el.style.cursor = 'pointer';
     
-    // Add category class for filtering
+    // Add category class for filtering and color
     el.classList.add(`category-${poi.category || 'default'}`);
+    
+    // Apply color using a CSS variable or a color overlay
+    el.style.filter = `hue-rotate(${getHueRotation(poiColor)})`;
     
     // Create minimal popup for click (only name, no hover functionality)
     const popup = new mapboxgl.Popup({ 
@@ -371,13 +442,15 @@ const IntegratedMap = () => {
                 `<img src="${poi.photo}" alt="${poi.name_en}" class="w-full h-full object-cover" 
                  onerror="this.onerror=null;this.src='data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'64\\' height=\\'64\\' viewBox=\\'0 0 64 64\\'%3E%3Crect width=\\'64\\' height=\\'64\\' fill=\\'%23f1f1f1\\'/%3E%3Ctext x=\\'50%\\' y=\\'50%\\' font-family=\\'Arial\\' font-size=\\'8\\' text-anchor=\\'middle\\' fill=\\'%23999\\'%3ENo Image%3C/text%3E%3C/svg%3E';">` :
                 `<div class="w-full h-full flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${poiColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
                 </div>`
               }
             </div>
             <div>
               <h3 class="font-bold text-base">${poi.name_en}</h3>
-              <p class="text-sm text-gray-600 capitalize">${poi.category ? poi.category.replace('_', ' ') : poi.type_en}</p>
+              <p class="text-sm text-gray-600 capitalize" style="color: ${poiColor}">
+                ${poi.category ? poi.category.replace('_', ' ') : poi.type_en}
+              </p>
               ${poi.description_en ? 
                 `<p class="text-xs text-gray-500 mt-1 max-w-[200px] line-clamp-2">${poi.description_en}</p>` : 
                 ''
@@ -457,9 +530,29 @@ const IntegratedMap = () => {
     
     // Store the marker reference
     poiMarkersRef.current[poi._id] = marker;
-  
+
   return marker;
-  };
+};
+
+const getHueRotation = (targetColor) => {
+  // This is a simplified approach - for more accurate colors,
+  // you might need a more sophisticated color transformation
+  
+  switch(targetColor) {
+    case '#3b82f6': // Blue
+      return '140deg'; // Rotate to blue
+    case '#8B4513': // Brown
+      return '30deg';  // Rotate to brown
+    case '#22c55e': // Green
+      return '0deg';   // No rotation needed for default green
+    case '#8B5CF6': // Purple
+      return '270deg'; // Rotate to purple
+    case '#1E5631': // Dark Green
+      return '-20deg'; // Slightly darker green
+    default:
+      return '0deg';   // Default no rotation
+  }
+};
   
   // Update POI markers visibility based on filters
   useEffect(() => {
@@ -745,7 +838,7 @@ const IntegratedMap = () => {
       .setHTML(`
         <div class="popup-content">
           <h3 class="font-bold">${route.name}</h3>
-          <p>${isStart ? 'Starting Point' : 'End Point'}</p>
+          <p>${isStart ? 'Starting Point' :'End Point'}</p>
         </div>
       `);
       
@@ -811,7 +904,12 @@ const IntegratedMap = () => {
     }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
     
     map.fitBounds(bounds, {
-      padding: { top: 50, bottom: 50, left: isSidebarOpen ? 350 : 50, right: 50 }
+      padding: { 
+        top: 50, 
+        bottom: isMobileView ? 150 : 50, // Add extra padding for mobile bottom nav
+        left: isSidebarOpen ? 350 : 50, 
+        right: 50 
+      }
     });
   };
   
@@ -1152,7 +1250,12 @@ const IntegratedMap = () => {
     }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
     
     map.fitBounds(bounds, {
-      padding: { top: 50, bottom: 50, left: isSidebarOpen ? 350 : 50, right: 50 }
+      padding: { 
+        top: 50, 
+        bottom: isMobileView ? 150 : 50, // Add extra padding for mobile bottom nav
+        left: isSidebarOpen ? 350 : 50, 
+        right: 50 
+      }
     });
     
     // Store route information
@@ -1304,6 +1407,9 @@ const IntegratedMap = () => {
     setMapClickEnabled(true);
     setError("Select your starting point");
     setActiveSidebarTab('planner');
+    if (isMobileView) {
+      setIsSidebarOpen(false); // Close sidebar on mobile when planning
+    }
   };
   
   // Clear route planning
@@ -1403,73 +1509,162 @@ const IntegratedMap = () => {
     });
     return Array.from(types);
   };
+  
+  // Toggle between map view and list view on mobile
+  const toggleMapListView = () => {
+    setMapListView(mapListView === 'map' ? 'list' : 'map');
+    // Always show sidebar in list view, hide in map view on mobile
+    if (isMobileView) {
+      setIsSidebarOpen(mapListView === 'map');
+    }
+  };
 
+
+  const MapLegend = () => {
+    return (
+      <div className="hidden md:block absolute bottom-4 right-4 bg-white p-4 rounded-lg shadow-lg z-10">
+        <h3 className="text-sm font-medium mb-3">Legend</h3>
+        
+        {/* POI Categories */}
+        <div className="mb-4">
+          <h4 className="text-xs font-medium text-gray-500 mb-2">Points of Interest</h4>
+          <div className="space-y-2">
+            <div className="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" className="mr-2">
+                <path fill="#3b82f6" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+              </svg>
+              <span className="text-xs">Business</span>
+            </div>
+            <div className="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" className="mr-2">
+                <path fill="#8B4513" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+              </svg>
+              <span className="text-xs">Cultural</span>
+            </div>
+            <div className="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" className="mr-2">
+                <path fill="#22c55e" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+              </svg>
+              <span className="text-xs">Landscape</span>
+            </div>
+            <div className="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" className="mr-2">
+                <path fill="#8B5CF6" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+              </svg>
+              <span className="text-xs">Religious</span>
+            </div>
+            <div className="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" className="mr-2">
+                <path fill="#1E5631" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+              </svg>
+              <span className="text-xs">Landscape Religious</span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Bike Routes */}
+        <div>
+          <h4 className="text-xs font-medium text-gray-500 mb-2">Bike Routes</h4>
+          <div className="space-y-2">
+            <div className="flex items-center">
+              <div className="w-4 h-4 rounded-full mr-2 bg-[#22c55e]"></div>
+              <span className="text-xs">Easy</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-4 h-4 rounded-full mr-2 bg-[#f59e0b]"></div>
+              <span className="text-xs">Medium</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-4 h-4 rounded-full mr-2 bg-[#ef4444]"></div>
+              <span className="text-xs">Hard</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
   return (
     <div className="h-screen w-full bg-white relative flex flex-col">
       {/* Header */}
       <header className="bg-white shadow-md z-10">
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div className="flex items-center justify-between h-16">
-      <div className="flex items-center">
-        <Link to="/" className="flex items-center">
-          <img 
-            src="/logo.png" 
-            alt="San Lorenzo Nuovo Logo" 
-            className="h-16 w-auto mr-3" 
-          />
-          <span className="font-bold text-lg text-[#22c55e]">San Lorenzo Nuovo Explorer</span>
-        </Link>
-      </div>
-      
-      <div className="relative w-full max-w-md mx-4">
-        <input
-          type="text"
-          placeholder="Search places and routes..."
-          value={searchQuery}
-          onChange={(e) => {
-            setSearchQuery(e.target.value);
-            setBikeRouteSearchQuery(e.target.value);
-          }}
-          className="w-full pl-10 pr-4 py-2 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#22c55e]"
-        />
-        <Search className="absolute left-3 top-2.5 h-4 w-4 text-[#6b7280]" />
-      </div>
-      
-      <div className="flex items-center space-x-2">
-        <button 
-          className={`p-2 rounded-full hover:bg-gray-100 relative ${activeSidebarTab === 'planner' ? 'bg-gray-100' : ''}`}
-          onClick={startRoutePlanning}
-          title="Route Planner"
-        >
-          <Route className="h-5 w-5 text-[#6b7280]" />
-        </button>
-        <button 
-          className={`p-2 rounded-full hover:bg-gray-100 ${showPois ? 'text-green-600' : 'text-gray-400'}`}
-          onClick={() => setShowPois(!showPois)}
-          title={showPois ? "Hide POIs" : "Show POIs"}
-        >
-          <MapPin className="h-5 w-5" />
-        </button>
-        <button 
-          className={`p-2 rounded-full hover:bg-gray-100 ${showBikeRoutes ? 'text-blue-600' : 'text-gray-400'}`}
-          onClick={() => setShowBikeRoutes(!showBikeRoutes)}
-          title={showBikeRoutes ? "Hide Bike Routes" : "Show Bike Routes"}
-        >
-          <Bike className="h-5 w-5" />
-        </button>
-        <button 
-          className="p-2 rounded-full hover:bg-gray-100"
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        >
-          <List className="h-5 w-5 text-[#6b7280]" />
-        </button>
-      </div>
-    </div>
-  </div>
-</header>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center">
+              <Link to="/" className="flex items-center">
+                <img 
+                  src="/logo.png" 
+                  alt="San Lorenzo Nuovo Logo" 
+                  className="h-12 w-auto mr-3" 
+                />
+                <span className="font-bold text-lg text-[#22c55e] hidden md:block">San Lorenzo Nuovo Explorer</span>
+              </Link>
+            </div>
+            
+            {/* Search bar - hide on mobile */}
+            <div className="relative w-full max-w-md mx-4 hidden md:block">
+              <input
+                type="text"
+                placeholder="Search places and routes..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setBikeRouteSearchQuery(e.target.value);
+                }}
+                className="w-full pl-10 pr-4 py-2 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#22c55e]"
+              />
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-[#6b7280]" />
+            </div>
+            
+            {/* Desktop header buttons - hide on mobile */}
+            <div className="hidden md:flex items-center space-x-2">
+              <button 
+                className={`p-2 rounded-full hover:bg-gray-100 relative ${activeSidebarTab === 'planner' ? 'bg-gray-100' : ''}`}
+                onClick={startRoutePlanning}
+                title="Route Planner"
+              >
+                <Route className="h-5 w-5 text-[#6b7280]" />
+              </button>
+              <button 
+                className={`p-2 rounded-full hover:bg-gray-100 ${showPois ? 'text-green-600' : 'text-gray-400'}`}
+                onClick={() => setShowPois(!showPois)}
+                title={showPois ? "Hide POIs" : "Show POIs"}
+              >
+                <MapPin className="h-5 w-5" />
+              </button>
+              <button 
+                className={`p-2 rounded-full hover:bg-gray-100 ${showBikeRoutes ? 'text-blue-600' : 'text-gray-400'}`}
+                onClick={() => setShowBikeRoutes(!showBikeRoutes)}
+                title={showBikeRoutes ? "Hide Bike Routes" : "Show Bike Routes"}
+              >
+                <Bike className="h-5 w-5" />
+              </button>
+              <button 
+                className="p-2 rounded-full hover:bg-gray-100"
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              >
+                <List className="h-5 w-5 text-[#6b7280]" />
+              </button>
+            </div>
+            
+            {/* Mobile header buttons */}
+            <div className="flex md:hidden">
+              <button 
+                className="p-2 rounded-full hover:bg-gray-100"
+                onClick={toggleMapListView}
+              >
+                {mapListView === 'map' ? (
+                  <List className="h-5 w-5 text-[#6b7280]" />
+                ) : (
+                  <MapPin className="h-5 w-5 text-[#22c55e]" />
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
       
       {/* Main content */}
-      <div className="flex-1 flex relative">
+      <div className={`flex-1 flex relative ${isMobileView && mapListView === 'list' ? 'hidden' : 'block'}`}>
         {/* Loading indicator */}
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-80 z-20">
@@ -1512,11 +1707,11 @@ const IntegratedMap = () => {
         
         {/* Sidebar */}
         {isSidebarOpen && (
-          <div className="absolute top-0 left-0 h-full w-80 bg-white shadow-lg z-10 overflow-hidden flex flex-col">
+          <div className={`${isMobileView ? 'fixed inset-0 z-30' : 'absolute top-0 left-0 h-full'} w-full md:w-80 bg-white shadow-lg overflow-hidden flex flex-col`}>
             {/* Tab Navigation */}
             <div className="flex border-b">
               <button 
-                className={`flex-1 py-3 font-medium text-sm ${activeSidebarTab === 'pois' ? 'text-green-600 border-b-2 border-green-600' : 'text-gray-500 hover:text-gray-700'}`}
+                className={`flex-1 py-3 font-medium text-sm ${activeSidebarTab === 'pois' ? 'text-green-600 border-b-2 border-green-600' :'text-gray-500 hover:text-gray-700'}`}
                 onClick={() => setActiveSidebarTab('pois')}
               >
                 <div className="flex items-center justify-center">
@@ -1554,6 +1749,20 @@ const IntegratedMap = () => {
               {/* POIs Tab */}
               {activeSidebarTab === 'pois' && (
                 <div>
+                  {/* Mobile search bar */}
+                  <div className="p-4 md:hidden">
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Search places..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#22c55e]"
+                      />
+                      <Search className="absolute left-3 top-2.5 h-4 w-4 text-[#6b7280]" />
+                    </div>
+                  </div>
+                  
                   {/* POI Filters */}
                   <div className="p-4 border-b">
                     <h3 className="font-medium text-[#1f2937] mb-3 flex items-center">
@@ -1687,6 +1896,12 @@ const IntegratedMap = () => {
                               setRouteSelectionStep(1);
                               setMapClickEnabled(true);
                               setError("Now select your destination");
+                              
+                              // On mobile, close sidebar and show map
+                              if (isMobileView) {
+                                setIsSidebarOpen(false);
+                                setMapListView('map');
+                              }
                             }}
                           >
                             <Route className="h-4 w-4 mr-2" />
@@ -1713,6 +1928,12 @@ const IntegratedMap = () => {
                                     essential: true
                                   });
                                 }
+                                
+                                // On mobile, close sidebar and show map with selected POI
+                                if (isMobileView) {
+                                  setIsSidebarOpen(false);
+                                  setMapListView('map');
+                                }
                               }}
                             >
                               <div className="flex items-start">
@@ -1734,7 +1955,7 @@ const IntegratedMap = () => {
                                     </div>
                                   )}
                                 </div>
-                                <div className="ml-3">
+                                <div className="ml-3 flex-1">
                                   <h3 className="font-medium text-[#1f2937]">{poi.name_en}</h3>
                                   <p className="text-sm text-[#6b7280] capitalize">
                                     {poi.category ? poi.category.replace('_', ' ') : poi.type_en}
@@ -1757,6 +1978,12 @@ const IntegratedMap = () => {
                                         setRouteSelectionStep(1);
                                         setMapClickEnabled(true);
                                         setError("Now select your destination");
+                                        
+                                        // On mobile, close sidebar and show map
+                                        if (isMobileView) {
+                                          setIsSidebarOpen(false);
+                                          setMapListView('map');
+                                        }
                                       }}
                                     >
                                       Start Route
@@ -1784,6 +2011,20 @@ const IntegratedMap = () => {
               {/* Bike Routes Tab */}
               {activeSidebarTab === 'routes' && (
                 <div>
+                  {/* Mobile search bar */}
+                  <div className="p-4 md:hidden">
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Search routes..."
+                        value={bikeRouteSearchQuery}
+                        onChange={(e) => setBikeRouteSearchQuery(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#22c55e]"
+                      />
+                      <Search className="absolute left-3 top-2.5 h-4 w-4 text-[#6b7280]" />
+                    </div>
+                  </div>
+                  
                   {/* Route Filters */}
                   <div className="p-4 border-b">
                     <h3 className="font-medium text-[#1f2937] mb-3 flex items-center">
@@ -1974,6 +2215,12 @@ const IntegratedMap = () => {
                                 setRouteSelectionStep(2);
                                 setRouteMode('cycling');
                                 fetchMultiPointRoute([startPoi, endPoi], 'cycling', routePreference);
+                                
+                                // On mobile, close sidebar and show map
+                                if (isMobileView) {
+                                  setIsSidebarOpen(false);
+                                  setMapListView('map');
+                                }
                               }
                             }}
                           >
@@ -2011,6 +2258,12 @@ const IntegratedMap = () => {
                                     // If route has path data, fit map to it
                                     if (route.path && route.path.length > 0) {
                                       fitMapToRoute(route.path);
+                                    }
+                                    
+                                    // On mobile, close sidebar and show map
+                                    if (isMobileView) {
+                                      setIsSidebarOpen(false);
+                                      setMapListView('map');
                                     }
                                   }}
                                 >
@@ -2135,12 +2388,18 @@ const IntegratedMap = () => {
                           } else {
                             setError("Click on the map to set waypoints");
                           }
+                          
+                          // On mobile, close sidebar and show map when enabling map click
+                          if (isMobileView && !mapClickEnabled) {
+                            setIsSidebarOpen(false);
+                            setMapListView('map');
+                          }
                         }}
                         className={`flex-1 py-2 px-3 rounded-md flex items-center justify-center space-x-1 ${
                           mapClickEnabled ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-700'
                         } hover:bg-amber-200`}
                       >
-                        <CircleDot className="h-4 w-4" />
+                        <MapPin className="h-4 w-4" />
                         <span>{mapClickEnabled ? "Disable Map Click" : "Enable Map Click"}</span>
                       </button>
                       
@@ -2165,71 +2424,71 @@ const IntegratedMap = () => {
                   </div>
                   
                   {/* Waypoints List */}
-<div className="p-4 border-b">
-  <h3 className="font-medium text-[#1f2937] mb-3">Your Route</h3>
-  
-  <div className="space-y-2">
-    {waypoints.map((waypoint, index) => (
-      waypoint && (
-        <div key={index} className="flex items-center bg-gray-50 p-3 rounded-lg">
-          <div className="h-6 w-6 rounded-full flex items-center justify-center mr-2" 
-               style={{
-                 backgroundColor: index === 0 ? '#22c55e' : 
-                                  index === waypoints.length - 1 ? '#3b82f6' : 
-                                  '#f59e0b',
-                 color: 'white',
-                 fontWeight: 'bold',
-                 fontSize: '12px'
-               }}>
-            {index + 1}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-medium text-sm truncate">
-              {waypoint.custom ? "Custom Location" : waypoint.name_en}
-            </p>
-            <p className="text-xs text-gray-500">
-              {index === 0 ? "Starting Point" : 
-               index === waypoints.length - 1 ? "Destination" : 
-               `Waypoint ${index}`}
-            </p>
-            {waypoint.custom && (
-              <p className="text-xs text-gray-400">
-                {waypoint.coordinates.lat.toFixed(5)}, {waypoint.coordinates.lng.toFixed(5)}
-              </p>
-            )}
-          </div>
-          {waypoints.length > 2 && index !== 0 && index !== waypoints.length - 1 && (
-            <button 
-              onClick={() => removeWaypoint(index)}
-              className="p-1 rounded-full hover:bg-gray-200"
-              title="Remove waypoint"
-            >
-              <X className="h-4 w-4 text-gray-500" />
-            </button>
-          )}
-        </div>
-      )
-    ))}
-    
-    {/* Show message when no waypoints selected */}
-    {(!waypoints.length || waypoints.every(wp => !wp)) && (
-      <p className="text-sm text-gray-500 text-center py-2">
-        Select points on the map to create a route
-      </p>
-    )}
-    
-    {/* Add waypoint button */}
-    {waypoints.length >= 2 && !waypoints.includes(null) && (
-      <button
-        onClick={addWaypoint}
-        className="w-full mt-2 py-2 px-3 rounded-md flex items-center justify-center text-sm bg-gray-100 text-gray-700 hover:bg-gray-200"
-      >
-        <Plus className="h-4 w-4 mr-1" />
-        Add Waypoint
-      </button>
-    )}
-  </div>
-</div>
+                  <div className="p-4 border-b">
+                    <h3 className="font-medium text-[#1f2937] mb-3">Your Route</h3>
+                    
+                    <div className="space-y-2">
+                      {waypoints.map((waypoint, index) => (
+                        waypoint && (
+                          <div key={index} className="flex items-center bg-gray-50 p-3 rounded-lg">
+                            <div className="h-6 w-6 rounded-full flex items-center justify-center mr-2" 
+                                style={{
+                                  backgroundColor: index === 0 ? '#22c55e' : 
+                                                index === waypoints.length - 1 ? '#3b82f6' : 
+                                                '#f59e0b',
+                                  color: 'white',
+                                  fontWeight: 'bold',
+                                  fontSize: '12px'
+                                }}>
+                              {index + 1}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm truncate">
+                                {waypoint.custom ? "Custom Location" : waypoint.name_en}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {index === 0 ? "Starting Point" : 
+                                index === waypoints.length - 1 ? "Destination" : 
+                                `Waypoint ${index}`}
+                              </p>
+                              {waypoint.custom && (
+                                <p className="text-xs text-gray-400">
+                                  {waypoint.coordinates.lat.toFixed(5)}, {waypoint.coordinates.lng.toFixed(5)}
+                                </p>
+                              )}
+                            </div>
+                            {waypoints.length > 2 && index !== 0 && index !== waypoints.length - 1 && (
+                              <button 
+                                onClick={() => removeWaypoint(index)}
+                                className="p-1 rounded-full hover:bg-gray-200"
+                                title="Remove waypoint"
+                              >
+                                <X className="h-4 w-4 text-gray-500" />
+                              </button>
+                            )}
+                          </div>
+                        )
+                      ))}
+                      
+                      {/* Show message when no waypoints selected */}
+                      {(!waypoints.length || waypoints.every(wp => !wp)) && (
+                        <p className="text-sm text-gray-500 text-center py-2">
+                          Select points on the map to create a route
+                        </p>
+                      )}
+                      
+                      {/* Add waypoint button */}
+                      {waypoints.length >= 2 && !waypoints.includes(null) && (
+                        <button
+                          onClick={addWaypoint}
+                          className="w-full mt-2 py-2 px-3 rounded-md flex items-center justify-center text-sm bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        >
+                          <Plus className="h-4 w-4 mr-1" />
+                          Add Waypoint
+                        </button>
+                      )}
+                    </div>
+                  </div>
                   
                   {/* Route Summary */}
                   {routeInfo && (
@@ -2282,15 +2541,21 @@ const IntegratedMap = () => {
                   
                   {/* Turn-by-turn Directions */}
                   {routeInfo && routeInfo.steps && routeInfo.steps.length > 0 && (
-  <TurnByTurnNavigation steps={routeInfo.steps} map={map} />
-)}
+                    <TurnByTurnNavigation steps={routeInfo.steps} map={map} />
+                  )}
                 </div>
               )}
             </div>
             
             {/* Close button */}
             <button 
-              onClick={() => setIsSidebarOpen(false)}
+              onClick={() => {
+                setIsSidebarOpen(false);
+                // Switch to map view on mobile when sidebar is closed
+                if (isMobileView) {
+                  setMapListView('map');
+                }
+              }}
               className="absolute top-4 right-4 p-1 rounded-full hover:bg-gray-100"
             >
               <X className="h-5 w-5 text-[#6b7280]" />
@@ -2299,31 +2564,13 @@ const IntegratedMap = () => {
         )}
         
         {/* Map Legend */}
-        <div className="absolute bottom-4 right-4 bg-white p-3 rounded-lg shadow-lg z-10">
-          <h3 className="text-sm font-medium mb-2">Legend</h3>
-          <div className="space-y-2">
-            <div className="flex items-center">
-              <div className="w-4 h-4 rounded-full mr-2 bg-[#22c55e]"></div>
-              <span className="text-xs">Easy Route</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-4 h-4 rounded-full mr-2 bg-[#f59e0b]"></div>
-              <span className="text-xs">Medium Route</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-4 h-4 rounded-full mr-2 bg-[#ef4444]"></div>
-              <span className="text-xs">Hard Route</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-6 h-6 rounded-full mr-2 flex items-center justify-center" style={{ backgroundImage: "url('/pointer.png')", backgroundSize: "contain", backgroundRepeat: "no-repeat" }}></div>
-              <span className="text-xs">Points of Interest</span>
-            </div>
-          </div>
-        </div>
+        <MapLegend></MapLegend>
+
+        
         
         {/* Click anywhere button when in map click mode */}
         {mapClickEnabled && (
-          <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white px-4 py-2 rounded-lg shadow-lg z-20 flex items-center">
+          <div className="fixed bottom-20 md:bottom-4 left-1/2 transform -translate-x-1/2 bg-white px-4 py-2 rounded-lg shadow-lg z-20 flex items-center">
             <span className="text-sm font-medium text-gray-600 mr-2">
               {currentWaypointIndex === 0 ? "Click anywhere on map to set starting point" : 
                currentWaypointIndex === waypoints.length - 1 ? "Click anywhere on map to set destination" :
@@ -2338,6 +2585,316 @@ const IntegratedMap = () => {
           </div>
         )}
       </div>
+      
+      {/* Mobile list view - shows only when in list mode */}
+      {isMobileView && mapListView === 'list' && (
+        <div className="flex-1 overflow-auto">
+          <div className="p-4">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder={activeSidebarTab === 'pois' ? "Search places..." : "Search routes..."}
+                value={activeSidebarTab === 'pois' ? searchQuery : bikeRouteSearchQuery}
+                onChange={(e) => {
+                  if (activeSidebarTab === 'pois') {
+                    setSearchQuery(e.target.value);
+                  } else {
+                    setBikeRouteSearchQuery(e.target.value);
+                  }
+                }}
+                className="w-full pl-10 pr-4 py-3 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#22c55e]"
+              />
+              <Search className="absolute left-3 top-3 h-5 w-5 text-[#6b7280]" />
+            </div>
+            
+            {/* Tabs for mobile list view */}
+            <div className="flex border-b mt-4">
+              <button 
+                className={`flex-1 py-3 font-medium text-sm ${activeSidebarTab === 'pois' ? 'text-green-600 border-b-2 border-green-600' : 'text-gray-500 hover:text-gray-700'}`}
+                onClick={() => setActiveSidebarTab('pois')}
+              >
+                <div className="flex items-center justify-center">
+                  <MapPin className="h-4 w-4 mr-1" />
+                  POIs
+                </div>
+              </button>
+              <button 
+                className={`flex-1 py-3 font-medium text-sm ${activeSidebarTab === 'routes' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                onClick={() => setActiveSidebarTab('routes')}
+              >
+                <div className="flex items-center justify-center">
+                  <Bike className="h-4 w-4 mr-1" />
+                  Bike Routes
+                </div>
+              </button>
+              <button 
+                className={`flex-1 py-3 font-medium text-sm ${activeSidebarTab === 'planner' ? 'text-amber-600 border-b-2 border-amber-600' : 'text-gray-500 hover:text-gray-700'}`}
+                onClick={() => {
+                  setActiveSidebarTab('planner');
+                  if (!isRoutingPanelOpen) {
+                    startRoutePlanning();
+                  }
+                }}
+              >
+                <div className="flex items-center justify-center">
+                  <Route className="h-4 w-4 mr-1" />
+                  Planner
+                </div>
+              </button>
+            </div>
+          </div>
+          
+          {/* Show content based on active tab */}
+          {activeSidebarTab === 'pois' && (
+            <div className="divide-y">
+              {filterPois().map(poi => (
+                <div 
+                  key={poi._id} 
+                  className="p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+                  onClick={() => {
+                    setSelectedPlace(poi);
+                    // Center map on POI
+                    const coords = getMapboxCoords(poi);
+                    if (coords && map) {
+                      map.flyTo({
+                        center: coords,
+                        zoom: 15,
+                        essential: true
+                      });
+                    }
+                    
+                    // Switch to map view
+                    setMapListView('map');
+                  }}
+                >
+                  <div className="flex items-start">
+                    <div className="h-16 w-16 rounded-lg flex-shrink-0 overflow-hidden">
+                      {poi.photo ? (
+                        <img 
+                          src={poi.photo} 
+                          alt={poi.name_en}
+                          className="h-full w-full object-cover"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.className = "hidden";
+                            e.target.parentNode.innerHTML = '<div class="h-full w-full bg-gray-200 flex items-center justify-center"><svg class="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg></div>';
+                          }}
+                        />
+                      ) : (
+                        <div className="h-full w-full bg-gray-200 flex items-center justify-center">
+                          <MapPin className="h-6 w-6 text-[#22c55e]" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="ml-3 flex-1">
+                      <h3 className="font-medium text-[#1f2937]">{poi.name_en}</h3>
+                      <p className="text-sm text-[#6b7280] capitalize">
+                        {poi.category ? poi.category.replace('_', ' ') : poi.type_en}
+                      </p>
+                      <p className="text-xs text-[#6b7280] mt-1 truncate max-w-[200px]">
+                        {poi.description_en ? poi.description_en.substring(0, 60) + (poi.description_en.length > 60 ? '...' : '') : 'No description available'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              {filterPois().length === 0 && (
+                <div className="p-8 text-center text-[#6b7280]">
+                  {searchQuery ? (
+                    <p>No places found matching "{searchQuery}"</p>
+                  ) : (
+                    <p>No points of interest available</p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+          
+          {activeSidebarTab === 'routes' && (
+            <div className="divide-y">
+              {filterBikeRoutes().map(route => (
+                <div 
+                  key={route._id} 
+                  className={`p-4 hover:bg-gray-50 transition-colors ${
+                    visibleRoutes.has(route._id) ? 'bg-blue-50/30' : ''
+                  }`}
+                >
+                  <div className="flex items-start">
+                    <div className="h-10 w-10 rounded-full flex-shrink-0 bg-opacity-10 flex items-center justify-center mr-2"
+                          style={{ backgroundColor: `${routeColors[route.difficulty] || routeColors.default}20` }}>
+                      <Bike className="h-5 w-5" style={{ color: routeColors[route.difficulty] || routeColors.default }} />
+                    </div>
+                    <div 
+                      className="flex-1 min-w-0 cursor-pointer"
+                      onClick={() => {
+                        setSelectedBikeRoute(route);
+                        
+                        // If route is not already visible, display it
+                        if (!visibleRoutes.has(route._id)) {
+                          fetchAndDisplayGpx(route._id);
+                        }
+                        
+                        // If route has path data, fit map to it
+                        if (route.path && route.path.length > 0) {
+                          fitMapToRoute(route.path);
+                        }
+                        
+                        // Switch to map view
+                        setMapListView('map');
+                      }}
+                    >
+                      <h3 className="font-medium text-[#1f2937]">{route.name}</h3>
+                      <div className="flex items-center text-sm text-[#6b7280] mt-1">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                          route.difficulty === 'easy' ? 'bg-green-100 text-green-800' :
+                          route.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {route.difficulty.charAt(0).toUpperCase() + route.difficulty.slice(1)}
+                        </span>
+                        <span className="mx-2">•</span>
+                        <span>{formatDistance(route.stats?.totalDistance * 1000 || 0)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              {filterBikeRoutes().length === 0 && (
+                <div className="p-8 text-center text-[#6b7280]">
+                  {bikeRouteSearchQuery ? (
+                    <p>No routes found matching "{bikeRouteSearchQuery}"</p>
+                  ) : (
+                    <p>No bike routes available</p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+          
+          {activeSidebarTab === 'planner' && (
+            <div className="p-4">
+              <div className="flex space-x-2 mb-3">
+                <button
+                  onClick={toggleRouteMode}
+                  className={`flex-1 py-2 px-3 rounded-md flex items-center justify-center space-x-1 ${
+                    routeMode === 'walking' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
+                  }`}
+                >
+                  <PersonStanding className="h-4 w-4" />
+                  <span>Walking</span>
+                </button>
+                
+                <button
+                  onClick={toggleRouteMode}
+                  className={`flex-1 py-2 px-3 rounded-md flex items-center justify-center space-x-1 ${
+                    routeMode === 'cycling' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'
+                  }`}
+                >
+                  <Bike className="h-4 w-4" />
+                  <span>Cycling</span>
+                </button>
+              </div>
+              
+              <button
+                onClick={() => {
+                  startRoutePlanning();
+                  setMapClickEnabled(true);
+                  setMapListView('map');
+                }}
+                className="w-full bg-green-500 text-white py-3 mt-4 rounded-full font-semibold hover:bg-green-600 transition-colors flex items-center justify-center"
+              >
+                <MapPin className="h-4 w-4 mr-2" />
+                Start Planning on Map
+              </button>
+              
+              {routeInfo && (
+                <div className="mt-6">
+                  <h3 className="font-medium text-[#1f2937] mb-3">Current Route</h3>
+                  
+                  <div className="grid grid-cols-2 gap-3 mb-3">
+                    <div className="bg-gray-50 p-3 rounded-md">
+                      <div className="text-gray-500 text-xs mb-1">Distance</div>
+                      <div className="font-semibold text-gray-900">{formatDistance(routeInfo.distance)}</div>
+                    </div>
+                    
+                    <div className="bg-gray-50 p-3 rounded-md">
+                      <div className="text-gray-500 text-xs mb-1">Estimated Time</div>
+                      <div className="font-semibold text-gray-900">{formatDuration(routeInfo.duration)}</div>
+                    </div>
+                  </div>
+                  
+                  <button
+                    onClick={() => {
+                      setMapListView('map');
+                    }}
+                    className="w-full bg-blue-500 text-white py-2 rounded-full font-medium transition-colors mt-2"
+                  >
+                    View Route on Map
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+      
+      {/* Mobile Bottom Navigation Bar */}
+      {isMobileView && (
+        <div className="fixed bottom-0 left-0 right-0 h-16 bg-white shadow-lg z-30 flex items-center justify-around border-t">
+          <button
+            className={`flex flex-col items-center justify-center w-1/4 p-1 ${
+              false ? 'text-green-600' : 'text-gray-500'
+            }`}
+            onClick={() => {
+              window.location.href = '/';
+            }}
+          >
+            <Home className="h-5 w-5" />
+            <span className="text-xs mt-1">Home</span>
+          </button>
+          <button
+            className={`flex flex-col items-center justify-center w-1/4 p-1 ${
+              activeSidebarTab === 'pois' ? 'text-green-600' : 'text-gray-500'
+            }`}
+            onClick={() => {
+              setActiveSidebarTab('pois');
+              setMapListView('list');
+              setIsSidebarOpen(true);
+            }}
+          >
+            <MapPin className="h-5 w-5" />
+            <span className="text-xs mt-1">Experiences</span>
+          </button>
+          <button
+            className={`flex flex-col items-center justify-center w-1/4 p-1 ${
+              activeSidebarTab === 'routes' ? 'text-blue-600' : 'text-gray-500'
+            }`}
+            onClick={() => {
+              setActiveSidebarTab('routes');
+              setMapListView('list');
+              setIsSidebarOpen(true);
+            }}
+          >
+            <Bike className="h-5 w-5" />
+            <span className="text-xs mt-1">Routes</span>
+          </button>
+          <button
+            className={`flex flex-col items-center justify-center w-1/4 p-1 ${
+              showPois ? 'text-green-600' : 'text-gray-500'
+            }`}
+            onClick={() => {
+              setShowPois(!showPois);
+              setMapListView('map');
+              setIsSidebarOpen(false);
+            }}
+          >
+            <Layers className="h-5 w-5" />
+            <span className="text-xs mt-1">Map/List</span>
+          </button>
+        </div>
+      )}
 
       <style jsx>{`
         .marker {
@@ -2350,10 +2907,8 @@ const IntegratedMap = () => {
         }
         
         .poi-marker {
-         
-          
-  transform-origin: bottom center;
-  will-change: transform;
+          transform-origin: bottom center;
+          will-change: transform;
         }
         
         .waypoint-marker {
@@ -2392,26 +2947,54 @@ const IntegratedMap = () => {
           margin: 0 0 5px 0;
           font-size: 14px;
           font-weight: 600;
-        }
-        
-        .popup-content p {
-          margin: 0;
-          font-size: 12px;
-          color: #666;
-        }
-        
-        .hover-popup-content h3 {
-          margin: 0 0 2px 0;
-          font-size: 16px;
-          color: #1f2937;
-        }
-        
-        .line-clamp-2 {
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
+        }.popup-content p {
+  margin: 0;
+  font-size: 12px;
+  color: #666;
+}
+
+.hover-popup-content h3 {
+  margin: 0 0 2px 0;
+  font-size: 16px;
+  color: #1f2937;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Mobile bottom navbar specific styles */
+@media (max-width: 768px) {
+  .mapboxgl-ctrl-bottom-right {
+    bottom: 80px !important; /* Adjust for mobile bottom nav */
+  }
+  
+  .mapboxgl-popup {
+    max-width: 80vw !important;
+  }
+  
+  .mobile-bottom-nav {
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+  }
+  
+  .mobile-bottom-nav-item {
+    position: relative;
+  }
+  
+  .mobile-bottom-nav-item.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 25%;
+    width: 50%;
+    height: 3px;
+    background-color: currentColor;
+    border-radius: 3px 3px 0 0;
+  }
+}
       `}</style>
     </div>
   );

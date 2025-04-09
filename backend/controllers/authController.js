@@ -1,7 +1,6 @@
-// controllers/authController.js - Basic implementation
+// controllers/authController.js - Updated implementation
 
 const User = require('../models/User');
-const OTP = require('../models/OTP');
 const Profile = require('../models/Profile');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
@@ -14,15 +13,26 @@ const register = async (req, res) => {
       lastName, 
       email, 
       password, 
-      phoneNumber, 
       userType,
-      interests 
+      interests,
+      businessType
     } = req.body;
 
-    if (!firstName || !lastName || !email || !password || !phoneNumber || !userType || !interests) {
+    // Generate a random phone number for backend compatibility
+    const phoneNumber = "+1" + Math.floor(1000000000 + Math.random() * 9000000000);
+
+    if (!firstName || !lastName || !email || !password || !userType) {
       return res.status(400).json({ 
         success: false, 
         message: 'Please provide all required fields' 
+      });
+    }
+
+    // Validate interests for non-business users
+    if ((userType === 'resident' || userType === 'tourist') && (!interests || interests.length === 0)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Please select at least one interest' 
       });
     }
 
@@ -35,15 +45,16 @@ const register = async (req, res) => {
       });
     }
 
-    // Create user
+    // Create user with auto-generated phone number and set as verified
     const user = await User.create({
       firstName,
       lastName,
       email,
       password, // Hashing should be handled in the User model
-      phoneNumber,
+      phoneNumber, // Using the generated phone number
       userType,
-      interests
+      interests: interests || [],
+      verified: true // Automatically verify user since we're skipping OTP
     });
 
     // Create user profile
@@ -55,7 +66,7 @@ const register = async (req, res) => {
     if (userType === 'business') {
       profileData.businessInfo = {
         companyName: '',
-        businessType: '',
+        businessType: businessType || '', // Include businessType if provided
         description: '',
         openingHours: ''
       };
@@ -116,7 +127,8 @@ const login = async (req, res) => {
     if (!user) {
       return res.status(401).json({ 
         success: false, 
-        message: 'Invalid credentials' 
+        message: 'Invalid credentials',
+        code: 'auth/user-not-found' // Add this code for frontend handling
       });
     }
 
@@ -149,100 +161,6 @@ const login = async (req, res) => {
     res.status(500).json({ 
       success: false, 
       message: 'Login failed', 
-      error: error.message 
-    });
-  }
-};
-
-// Generate OTP
-const generateUserOTP = async (req, res) => {
-  try {
-    const { phoneNumber, userId } = req.body;
-
-    if (!phoneNumber) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Please provide phone number' 
-      });
-    }
-
-    // Generate a new OTP (4-digit number)
-    const code = Math.floor(1000 + Math.random() * 9000).toString();
-    
-    // Set expiry time (10 minutes from now)
-    const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + 10);
-    
-    // Store OTP in database
-    await OTP.create({
-      userId: userId || null,
-      phoneNumber,
-      code,
-      expiresAt
-    });
-
-    // In a real application, you would send the OTP via SMS
-    res.status(200).json({ 
-      success: true,
-      message: 'OTP sent successfully',
-      // Include the OTP in the response for testing purposes
-      // Remove this in production
-      otp: code,
-      expiresAt
-    });
-  } catch (error) {
-    console.error('OTP generation error:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to generate OTP', 
-      error: error.message 
-    });
-  }
-};
-
-// Verify OTP
-const verifyOTP = async (req, res) => {
-  try {
-    const { phoneNumber, code } = req.body;
-
-    if (!phoneNumber || !code) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Please provide phone number and OTP code' 
-      });
-    }
-
-    // Find the OTP
-    const otp = await OTP.findOne({
-      phoneNumber,
-      code,
-      expiresAt: { $gt: new Date() }
-    });
-
-    if (!otp) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Invalid or expired OTP' 
-      });
-    }
-
-    // If there's a userId associated with this OTP, mark user as verified
-    if (otp.userId) {
-      await User.findByIdAndUpdate(otp.userId, { verified: true });
-    }
-
-    // Delete the used OTP
-    await OTP.findByIdAndDelete(otp._id);
-
-    res.status(200).json({ 
-      success: true,
-      message: 'OTP verified successfully' 
-    });
-  } catch (error) {
-    console.error('OTP verification error:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to verify OTP', 
       error: error.message 
     });
   }
@@ -283,7 +201,5 @@ const getCurrentUser = async (req, res) => {
 module.exports = {
   register,
   login,
-  generateUserOTP,
-  verifyOTP,
   getCurrentUser
 };
