@@ -1,0 +1,90 @@
+suv description
+
+
+Name: SUV
+Description: The Trekking SUV is the perfect e-bike for those looking for versatility and comfort in any situation.
+
+Price: €3,290
+
+Details: The Trekking SUV is the perfect e-bike for those looking for versatility and comfort in every situation. Equipped with a dual-suspension frame with semi-integrated rear monoshock, it combines a clean and elegant design with high-level performance.
+
+Ideal for urban routes and more adventurous excursions, it also easily adapts to dirt roads and more challenging terrain. Thanks to the 48V platform, tackling steep climbs becomes simple, while the 720Wh (48V) battery guarantees the autonomy necessary to explore ever greater distances.
+
+Setup:
+The SUV model is equipped with a 100Nm XP central motor (48V) and a 48V-15Ah-720Wh semi-integrated battery.
+
+The gearing is the Shimano Altus M370 9-speed and the brakes are 180mm hydraulic discs.
+
+You will also be able to control all the functions of your e-bike, through a new color LCD display.
+
+
+Motor: XP control panel 48V-250W XP (100Nm)
+
+Drums: 48V20Ah 960Wh
+
+Coverage: CST 27.5" x 2.4"
+
+Technical specifications (Tabular form)
+Chassis
+27.5" aluminum suspension
+Motor
+XP control panel 48V-250W XP (100Nm)
+Drums
+48V20Ah 960Wh
+Change
+Shimano Altus M370, 9-speed
+Brakes
+Hydraulic disc, 180mm
+Coverings
+CST 27.5" x 2.4"
+Display
+COLOR LCD Sport, with 5 levels of assistance for each mode (ECO-NORMAL)
+Handlebar stem
+Adjustable in aluminum
+Fork
+Suntour SF 14-MT-E45-DS-LO, 29"
+
+
+
+
+
+Name: I-D7
+Description: Affordable, versatile and designed for the city, this e-bike combines practicality and performance in a compact design with an integrated battery.
+
+
+Price: €1,649.
+
+
+Details: Accessible, versatile and designed for the city, this e-bike combines practicality and performance in a compact design with an integrated battery. The 26″ wheels guarantee excellent accessibility, making it ideal even for smaller sizes.
+
+Thanks to the 40Nm XP rear motor and the 48V – 13Ah, 624Wh XP battery, it ensures smooth pedaling and excellent autonomy, perfect for your daily commute.
+
+Setup
+The I-D7 is equipped with a 40Nm XP rear wheel motor and a 48V-13Ah-624Wh XP battery.
+
+The setup is completed by 180mm mechanical disc brakes and a Shimano Tourney 300D 7-speed gearbox.
+
+Motor: XP on rear wheel 48V-250W (40Nm)
+
+Drums: XP, 48V - 13Ah, 624Wh
+
+Coverage: 26" x 2.15"
+Technical specifications (Tabular form)
+Chassis
+Aluminum 26"
+Motor
+XP on rear wheel 48V-250W (40Nm)
+Drums
+XP, 48V - 13Ah, 624Wh
+Change
+Shimano Tourney 300D, 7 speed
+Brakes
+Hydraulic discs
+Coverings
+26" x 2.15"
+Display
+LCD, with 5 assistance levels for each power mode (ECO-NORMAL)
+Handlebar stem
+Fixed in Aluminum
+Fork
+Shock absorber aluminum

@@ -14,7 +14,7 @@ import MapPage from './pages/map/map';
 import ResidentDashboard from './components/Dashboard/ResidentDashboard';
 import TouristDashboard from './components/Dashboard/TouristDashboard';
 import BusinessDashboard from './components/Dashboard/BusinessDashboard';
-
+import AddBikeForm from './pages/BikeBusiness/BikeBookingForm_ID';
 import RouteCreationPage from './pages/navigation/RouteCreationPage';
 import BikeWalkNavigation from './components/admin/BikeWalkNavigation';
 import RouteManagementPage from './components/admin/RouteManagementPage';
@@ -26,28 +26,43 @@ import BikeRouteManagement from './components/admin/BikeRouteManagement';
 import GpxTrackMap from './pages/map/GpxMapViewer';
 import { PartnerSurveyRedirect, UserSurveyRedirect } from './pages';
 import ProtectedRoute from './pages/ProtectedRoute';
-
+import BikeBookingID from './pages/BikeBusiness/BikeBookingForm_ID';
+import BikeBookingSUV from './pages/BikeBusiness/BikeBookingForm_SUV';
+import AdminLoginPage from './pages/AdminLoginPage';
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<HomePage />} />
+          
+          <Route path="/resident-dashboard" element={<ResidentDashboard/>} />
+          <Route path="/tourist-dashboard" element={<TouristDashboard/>} />
+          <Route path="/business-dashboard" element={<BusinessDashboard/>} />
+          <Route path="/gpx-track-map" element={<GpxTrackMap/>} />
+          <Route path="/bikerental" element={<BikeRental/>} />
+          <Route path="/bookbikeID" element={<BikeBookingID/>} />
+          <Route path="/bookbikeSUV" element={<BikeBookingSUV />} />
+          
+          <Route path="/admin" element={<AdminPage/>} />
+          
+
+          <Route path="/adminlogin" element={
+            <AdminLoginPage>
           <Route path="/admin" element={<AdminPage/>} />
           <Route path="/admin/poi" element={<POIManagementPage />} />
           <Route path="/admin/poi/new" element={<POIManagementPage initialView="add" />} />
           <Route path="/admin/poi/bulk-upload" element={<BulkUploadPage />} />
           <Route path="/admin/poi/analytics" element={<POIAnalyticsPage />} />
           <Route path="/admin/poi/map" element={<MapPage/>} />
-          <Route path="/resident-dashboard" element={<ResidentDashboard/>} />
-          <Route path="/tourist-dashboard" element={<TouristDashboard/>} />
-          <Route path="/business-dashboard" element={<BusinessDashboard/>} />
-          <Route path="/gpx-track-map" element={<GpxTrackMap/>} />
-          <Route path="/bikerental" element={<BikeRental/>} />
+          </AdminLoginPage>}/>
+
+        
           {/* Survey Redirect Pages */}
           <Route path="/partner-survey" element={
             <ProtectedRoute>
               <PartnerSurveyRedirect />
+              
             </ProtectedRoute>
           } />
           <Route path="/user-survey" element={

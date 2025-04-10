@@ -14,7 +14,7 @@ const Layout = () => {
             © 2025 SmartAppKey
           </div>
           <Link 
-            to="/admin" 
+            to="/adminlogin" 
             className="bg-[#032c60] hover:bg-[#16a34a] text-white px-4 py-1.5 rounded-md text-sm font-medium transition-colors absolute right-4"
           >
             Admin
