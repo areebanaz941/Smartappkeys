@@ -5,7 +5,7 @@ import HomePage from './pages/home';
 import Layout from './pages/Layout';
 
 import "./index.css";
-
+import BikeRental from './pages/BikeRental';
 import AdminPage from './pages/adminpage';
 import POIManagementPage from './components/admin/POIManagementPage';
 import POIAnalyticsPage from './components/admin/POIAnalyticsPage';
@@ -43,7 +43,7 @@ function App() {
           <Route path="/tourist-dashboard" element={<TouristDashboard/>} />
           <Route path="/business-dashboard" element={<BusinessDashboard/>} />
           <Route path="/gpx-track-map" element={<GpxTrackMap/>} />
-
+          <Route path="/bikerental" element={<BikeRental/>} />
           {/* Survey Redirect Pages */}
           <Route path="/partner-survey" element={
             <ProtectedRoute>

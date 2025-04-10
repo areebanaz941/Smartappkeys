@@ -305,7 +305,7 @@ const HomePage = () => {
                 <a href="/explorer" className="text-gray-600 hover:text-blue-800 px-3 pt-5 pb-2 font-medium text-sm">
                   {header.destinations}
                 </a>
-                <a href="/review" className="text-gray-600 hover:text-blue-800 px-3 pt-5 pb-2 font-medium text-sm">
+                <a href="/bikerental" className="text-gray-600 hover:text-blue-800 px-3 pt-5 pb-2 font-medium text-sm">
                   {header.experiences}
                 </a>
                 <a href="/rewards" className="text-gray-600 hover:text-blue-800 px-3 pt-5 pb-2 font-medium text-sm">

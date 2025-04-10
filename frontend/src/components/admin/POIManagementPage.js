@@ -24,7 +24,7 @@ const POIManagementPage = ({ initialView = 'list' }) => {// 'list', 'add', 'edit
         setError(null);
         
         try {
-            const apiUrl = 'http://localhost:5000/api/pois';
+            const apiUrl = 'https://smartappkeys.onrender.com/api/pois';
             console.log('Fetching POIs from:', apiUrl);
             
             const response = await fetch(apiUrl);
@@ -73,7 +73,7 @@ const POIManagementPage = ({ initialView = 'list' }) => {// 'list', 'add', 'edit
         }
         
         try {
-            const apiUrl = `http://localhost:5000/api/pois/${id}`;
+            const apiUrl = `https://smartappkeys.onrender.com/api/pois/${id}`;
             console.log('Deleting POI at:', apiUrl);
             
             const response = await fetch(apiUrl, {
@@ -214,7 +214,7 @@ const POIManagementPage = ({ initialView = 'list' }) => {// 'list', 'add', 'edit
                     
                     // Check if POI has an ID - if yes, update existing POI
                     if (poi._id) {
-                        const updateResponse = await fetch(`http://localhost:5000/api/pois/${poi._id}`, {
+                        const updateResponse = await fetch(`https://smartappkeys.onrender.com/api/pois/${poi._id}`, {
                             method: 'PUT',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(poi)
@@ -228,7 +228,7 @@ const POIManagementPage = ({ initialView = 'list' }) => {// 'list', 'add', 'edit
                         }
                     } else {
                         // Create new POI
-                        const createResponse = await fetch('http://localhost:5000/api/pois', {
+                        const createResponse = await fetch('https://smartappkeys.onrender.com/api/pois', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(poi)
