@@ -935,6 +935,14 @@ const InterestsStep = ({ data, updateData, onPrev, onRegistrationSuccess }) => {
     navigate('/explorer');
   };
 
+  const surveyIDs = {
+    resident: 'mKRpEg',
+    guest: 'w5VRlP',
+    partner: 'wgObKD'
+  };
+
+  const surveyID = surveyIDs[data.userType];
+
   return (
     <div className="px-4 py-4 sm:py-6">
       <div className="flex items-center mb-4">
@@ -1000,15 +1008,13 @@ const InterestsStep = ({ data, updateData, onPrev, onRegistrationSuccess }) => {
           </div>
           
           <div className="space-y-4">
-            <a
-              href={data.userType === 'resident' ? 'https://form.jotform.com/resident' : 'https://form.jotform.com/guest'}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block w-full bg-green-500 text-white py-3 rounded-full font-semibold hover:bg-green-600 transition-colors text-center"
-              onClick={handleSurveyComplete}
-            >
+            <button
+                data-tally-open={surveyID} data-tally-emoji-text="👋" data-tally-emoji-animation="wave"
+                //onClick={handleSurveyClick}
+                className="w-full bg-[#22c55e] text-white py-3 px-4 rounded-full font-semibold hover:bg-[#16a34a] transition-colors flex items-center justify-center"
+              >
               Take Quick Survey
-            </a>
+            </button>
             
             <button
               type="button"
