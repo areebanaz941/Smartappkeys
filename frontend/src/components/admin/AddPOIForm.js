@@ -1,6 +1,7 @@
 // src/components/admin/AddPOIForm.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import config from '../../config';
 
 const AddPOIForm = () => {
   const navigate = useNavigate();
@@ -138,7 +139,7 @@ const AddPOIForm = () => {
       
       // Log the full request URL
       // Use the absolute URL with the correct port:
-      const apiUrl = 'https://smartappkeys.onrender.com/api/pois';
+      const apiUrl = config.getApiUrl('pois');
       console.log('API endpoint:', apiUrl, 'with method: POST');
 
       // Send to backend with more detailed logging

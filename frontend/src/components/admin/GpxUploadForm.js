@@ -1,6 +1,7 @@
 // src/components/admin/GpxUploadForm.js
 import React, { useState, useRef } from 'react';
 import { Upload, X, Check, Map, FileUp, FileX, Loader2 } from 'lucide-react';
+import config from '../../config';
 
 const GpxRouteUpload = ({ onUploadSuccess, onUploadFail, formData, setFormData }) => {
   const [isDragging, setIsDragging] = useState(false);
@@ -160,7 +161,7 @@ const GpxRouteUpload = ({ onUploadSuccess, onUploadFail, formData, setFormData }
       }, 300);
       
       // Make the upload request
-      const response = await fetch('https://smartappkeys.onrender.com/api/bike-routes/upload', {
+      const response = await fetch(config.getApiUrl('bike-routes/upload'), {
         method: 'POST',
         body: formData
       });

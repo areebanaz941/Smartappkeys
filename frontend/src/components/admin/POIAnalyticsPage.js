@@ -1,6 +1,7 @@
 // src/pages/admin/POIAnalyticsPage.jsx
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import config from '../../config';
 
 const POIAnalyticsPage = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -23,7 +24,7 @@ const POIAnalyticsPage = () => {
       setError(null);
       
       try {
-        const apiUrl = 'https://smartappkeys.onrender.com/api/pois';
+        const apiUrl = config.getApiUrl('pois');
         console.log('Fetching POIs from:', apiUrl);
         
         const response = await fetch(apiUrl);

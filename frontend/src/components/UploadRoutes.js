@@ -3,7 +3,9 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Map, Image, Save, Eye } from 'lucide-react';
 import axios from 'axios';
-import Header from '../pages/header';
+//import Header from '../pages/header';
+import config from '../config';
+
 const RouteUploadForm = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -73,7 +75,7 @@ const RouteUploadForm = () => {
                     imageFiles.map(async (file) => {
                         console.log('Processing file:', file.name); // Debug log
                         if (file.type === 'image/heic' || file.name.toLowerCase().endsWith('.heic')) {
-                            const response = await fetch('https://smartappkeys.onrender.com/api/convert-heic', {
+                            const response = await fetch(config.getApiUrl('convert-heic'), {
                                 method: 'POST',
                                 body: file
                             });
@@ -201,7 +203,7 @@ const RouteUploadForm = () => {
             console.log(pair[0], pair[1]);
         }
 
-        const response = await axios.post('https://smartappkeys.onrender.com/api/routes', formDataToSend, {
+        const response = await axios.post(config.getApiUrl('routes'), formDataToSend, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             }

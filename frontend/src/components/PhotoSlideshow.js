@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import config from '../config';
 
 const PhotoSlideshow = ({ photos }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -41,7 +42,7 @@ const PhotoSlideshow = ({ photos }) => {
             return '/placeholder-image.jpg';
         }
         
-       return `https://smartappkeys.onrender.com/${imagePath}`;
+       return config.getAssetUrl(`${imagePath}`);
     };
 
     const getThumbnailUrl = (photo) => {
@@ -57,7 +58,7 @@ const PhotoSlideshow = ({ photos }) => {
             return '/placeholder-image.jpg';
         }
         
-        return `https://smartappkeys.onrender.com/${thumbnailPath}`;
+        return config.getAssetUrl(`${thumbnailPath}`);
     };
 
     const Slide = ({ isFullscreen }) => {

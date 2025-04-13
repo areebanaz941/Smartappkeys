@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { MapPin, Edit, Trash2, Route, Plus, Download, ArrowLeft, Eye } from 'lucide-react';
+import config from '../../config';
 
 const BikeRouteManagement = ({ mode = "view" }) => {
   const [routes, setRoutes] = useState([]);
@@ -33,7 +34,7 @@ const BikeRouteManagement = ({ mode = "view" }) => {
       try {
         if (mode === 'edit' && id) {
           // Fetch a specific route for editing
-          const response = await fetch(`https://smartappkeys.onrender.com/api/bike-routes/${id}`);
+          const response = await fetch(config.getApiUrl(`bike-routes/${id}`));
           
           if (!response.ok) {
             throw new Error(`Server responded with status: ${response.status}`);
@@ -60,7 +61,7 @@ const BikeRouteManagement = ({ mode = "view" }) => {
           });
         } else if (mode === 'view' || mode === 'statistics') {
           // Fetch all routes
-          const response = await fetch('https://smartappkeys.onrender.com/api/bike-routes');
+          const response = await fetch(config.getApiUrl('bike-routes'));
           
           if (!response.ok) {
             throw new Error(`Server responded with status: ${response.status}`);
@@ -167,8 +168,8 @@ const BikeRouteManagement = ({ mode = "view" }) => {
     
     try {
       const apiUrl = mode === 'edit' 
-        ? `https://smartappkeys.onrender.com/api/bike-routes/${id}` 
-        : 'https://smartappkeys.onrender.com/api/bike-routes';
+        ? config.getApiUrl(`bike-routes/${id}`) 
+        : config.getApiUrl(`bike-routes`);
       
       const method = mode === 'edit' ? 'PUT' : 'POST';
       
@@ -205,7 +206,7 @@ const BikeRouteManagement = ({ mode = "view" }) => {
     if (!id) return;
     
     try {
-      const response = await fetch(`https://smartappkeys.onrender.com/api/bike-routes/${id}`, {
+      const response = await fetch(config.getApiUrl(`bike-routes/${id}`), {
         method: 'DELETE'
       });
       

@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import AddPOIForm from '../../components/admin/AddPOIForm';
+import config from '../../config';
 
 const POIManagementPage = ({ initialView = 'list' }) => {// 'list', 'add', 'edit', 'bulk'
     const navigate = useNavigate();
@@ -24,7 +25,7 @@ const POIManagementPage = ({ initialView = 'list' }) => {// 'list', 'add', 'edit
         setError(null);
         
         try {
-            const apiUrl = 'https://smartappkeys.onrender.com/api/pois';
+            const apiUrl = config.getApiUrl('pois');
             console.log('Fetching POIs from:', apiUrl);
             
             const response = await fetch(apiUrl);
@@ -73,7 +74,7 @@ const POIManagementPage = ({ initialView = 'list' }) => {// 'list', 'add', 'edit
         }
         
         try {
-            const apiUrl = `https://smartappkeys.onrender.com/api/pois/${id}`;
+            const apiUrl = config.getApiUrl(`pois/${id}`);
             console.log('Deleting POI at:', apiUrl);
             
             const response = await fetch(apiUrl, {
@@ -214,7 +215,7 @@ const POIManagementPage = ({ initialView = 'list' }) => {// 'list', 'add', 'edit
                     
                     // Check if POI has an ID - if yes, update existing POI
                     if (poi._id) {
-                        const updateResponse = await fetch(`https://smartappkeys.onrender.com/api/pois/${poi._id}`, {
+                        const updateResponse = await fetch(config.getApiUrl(`pois/${poi._id}`), {
                             method: 'PUT',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(poi)
@@ -228,7 +229,7 @@ const POIManagementPage = ({ initialView = 'list' }) => {// 'list', 'add', 'edit
                         }
                     } else {
                         // Create new POI
-                        const createResponse = await fetch('https://smartappkeys.onrender.com/api/pois', {
+                        const createResponse = await fetch(config.getApiUrl('pois'), {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(poi)
