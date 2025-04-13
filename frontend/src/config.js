@@ -1,7 +1,7 @@
 // src/config.js
 
 const PRODUCTION_URL = 'https://smartappkeys.onrender.com';
-const DEVELOPMENT_URL = 'https://smartappkeys.onrender.com';
+const DEVELOPMENT_URL = 'https://localhost:5000';
 
 const config = {
   // Base API URL will automatically switch based on environment

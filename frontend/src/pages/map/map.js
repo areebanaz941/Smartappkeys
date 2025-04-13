@@ -24,6 +24,8 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import NavigationSidebar from '../navigation/NavigationSidebar';
 import { useLocation } from 'react-router-dom';
 import BikeRouteManagement from '../../components/admin/BikeRouteManagement';
+import config from '../../config'; // adjust path based on location
+
 // Set your access token
 mapboxgl.accessToken = 'pk.eyJ1IjoibTJvdGVjaCIsImEiOiJjbTczbzU4aWQwMWdmMmpzY3N4ejJ3czlnIn0.fLDR4uG8kD8-g_IDM8ZPdQ';
 
@@ -113,7 +115,7 @@ const location = useLocation();
     const fetchPois = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch('https://smartappkeys.onrender.com/api/pois');
+        const response = await fetch(config.getApiUrl('pois'));
         
         if (!response.ok) {
           throw new Error(`Server responded with status: ${response.status}`);
@@ -609,7 +611,7 @@ const location = useLocation();
 const fetchBikeRoutes = async () => {
   try {
     setIsBikeRoutesLoading(true);
-    const response = await fetch('https://smartappkeys.onrender.com/api/bike-routes');
+    const response = await fetch(config.getApiUrl('bike-routes'));
     
     if (!response.ok) {
       throw new Error(`Server responded with status: ${response.status}`);
@@ -640,7 +642,7 @@ const fetchBikeRoutes = async () => {
 // Function to fetch a specific bike route
 const fetchBikeRoute = async (routeId) => {
   try {
-    const response = await fetch(`https://smartappkeys.onrender.com/api/bike-routes/${routeId}`);
+    const response = await fetch(config.getApiUrl(`bike-routes/${routeId}`));
     
     if (!response.ok) {
       throw new Error(`Server responded with status: ${response.status}`);
@@ -683,7 +685,7 @@ const downloadGpxFile = async (routeId) => {
     console.log('GPX file path:', route.gpxFile);
     
     // Download the GPX file
-    const response = await fetch(`https://smartappkeys.onrender.com/api/bike-routes/${routeId}/gpx`);
+    const response = await fetch(config.getApiUrl(`bike-routes/${routeId}/gpx`));
     
     console.log('GPX download response status:', response.status);
     
