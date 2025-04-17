@@ -70,8 +70,8 @@
       "routesPlaceholder": "Cerca percorsi..."
     },
     "legend": "Legenda",
-    "pointsOfInterest": "Punti di Interesse",
-    "bikeRoutes": "Percorsi Ciclistici",
+    "pointsOfInterest": "Luoghi",
+    "bikeRoutes": "Percorsi",
     "navigation": {
       "title": "Indicazioni Passo-Passo"
     },
@@ -118,7 +118,7 @@
       "noRoutes": "Nessun percorso ciclistico disponibile"
     },
     "planner": {
-      "name": "Pianifica Percorso",
+      "name": "Pianifica",
       "options": "Opzioni Percorso",
       "yourRoute": "Il Tuo Percorso",
       "summary": "Riepilogo Percorso",

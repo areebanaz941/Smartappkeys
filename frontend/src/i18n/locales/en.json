@@ -71,8 +71,8 @@
       "routesPlaceholder": "Search routes..."
     },
     "legend": "Legend",
-    "pointsOfInterest": "Points of Interest",
-    "bikeRoutes": "Bike Routes",
+    "pointsOfInterest": "Places",
+    "bikeRoutes": "Routes",
     "navigation": {
       "title": "Turn-by-Turn Directions"
     },
@@ -119,7 +119,7 @@
       "noRoutes": "No bike routes available"
     },
     "planner": {
-      "name": "Plan Route",
+      "name": "Plan",
       "options": "Route Options",
       "yourRoute": "Your Route",
       "summary": "Route Summary",
