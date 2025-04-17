@@ -1,10 +1,20 @@
 // src/components/Layout.jsx
 import React from 'react';
 import { Outlet, Link } from 'react-router-dom';
+import { User } from 'lucide-react';
+
 
 const Layout = () => {
   return (
     <div className="min-h-screen flex flex-col">
+      {/* User profile icon floating in top-right */}
+      <Link
+        to="/user-profile"
+        className="absolute top-4 right-4 bg-white border rounded-full p-2 shadow hover:bg-green-100 transition"
+        title="My Profile"
+      >
+        <User className="w-5 h-5 text-green-600" />
+      </Link>
       <main className="flex-grow">
         <Outlet />
       </main>
