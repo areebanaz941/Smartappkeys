@@ -1,7 +1,9 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
-// Custom turn-by-turn navigation component
+// Custom turn-by-turn navigation component with i18n support
 const TurnByTurnNavigation = ({ steps, map }) => {
+    const { t } = useTranslation();
     const [hoveredStepIndex, setHoveredStepIndex] = useState(null);
   
     // Map of Mapbox maneuver types to custom arrow components
@@ -98,7 +100,9 @@ const TurnByTurnNavigation = ({ steps, map }) => {
     return (
       <div className="turn-by-turn-navigation bg-white rounded-lg shadow-md">
         <div className="p-4">
-          <h3 className="text-lg font-bold mb-4 text-gray-800">Turn-by-Turn Directions</h3>
+          <h3 className="text-lg font-bold mb-4 text-gray-800">
+            {t('map.navigation.title', 'Turn-by-Turn Directions')}
+          </h3>
           <div className="space-y-3">
             {steps.map((step, index) => (
               <div 
@@ -131,7 +135,7 @@ const TurnByTurnNavigation = ({ steps, map }) => {
     );
   };
 
-// Directional Arrow Components
+// Directional Arrow Components remain the same
 const ArrowDefault = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="10" />
@@ -140,6 +144,7 @@ const ArrowDefault = () => (
   </svg>
 );
 
+// Other arrow components...
 const ArrowStraight = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <line x1="12" y1="5" x2="12" y2="19" />
@@ -217,9 +222,3 @@ const formatDuration = (seconds) => {
 };
 
 export default TurnByTurnNavigation;
-
-// Add this to your existing component to integrate
-// In the Route Planner Tab, replace the existing directions section with:
-// {routeInfo && routeInfo.steps && routeInfo.steps.length > 0 && (
-//   <TurnByTurnNavigation steps={routeInfo.steps} />
-// )}
