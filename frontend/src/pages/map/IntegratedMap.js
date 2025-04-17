@@ -2679,7 +2679,7 @@ const response = await fetch(
               <input
                 type="text"
                 placeholder={activeSidebarTab === 'pois' ? 
-                  t('map.search.poisPlaceholder', "Search places...") : 
+                  t('map.search.placesPlaceholder', "Search places...") : 
                   t('map.search.routesPlaceholder', "Search routes...")}
                 value={activeSidebarTab === 'pois' ? searchQuery : bikeRouteSearchQuery}
                 onChange={(e) => {
