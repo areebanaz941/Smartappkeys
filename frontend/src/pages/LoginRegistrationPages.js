@@ -160,7 +160,7 @@ const LoginPage = ({ onClose, onSignUpClick, registrationSuccess, currentLanguag
     setAccountNotFound(false);
     
     try {
-      console.log("Submitting login data:", formData);
+      console.log("Submitting login data for user:", formData.email);
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -378,7 +378,7 @@ const LoginPage = ({ onClose, onSignUpClick, registrationSuccess, currentLanguag
       <button
         type="button"
         className="w-full bg-indigo-900 text-white py-3 rounded-full font-semibold mt-6"
-        onClick={() => navigate('/explore')}
+        onClick={() => navigate('/explorer')}
       >
         {texts.explore}
       </button>

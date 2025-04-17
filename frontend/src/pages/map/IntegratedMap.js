@@ -2943,7 +2943,7 @@ const response = await fetch(
             }}
           >
             <Home className="h-5 w-5" />
-            <span className="text-xs mt-1">{t('map.shop', 'Shop')}</span>
+            <span className="text-xs mt-1">{t('map.mobileNav.shop', 'Shop')}</span>
           </button>
           <button
             className={`flex flex-col items-center justify-center w-1/4 p-1 ${
@@ -2956,7 +2956,7 @@ const response = await fetch(
             }}
           >
             <MapPin className="h-5 w-5" />
-            <span className="text-xs mt-1">{t('map.experiences', 'Experiences')}</span>
+            <span className="text-xs mt-1">{t('map.mobileNav.experiences', 'Experiences')}</span>
           </button>
           <button
             className={`flex flex-col items-center justify-center w-1/4 p-1 ${
@@ -2969,7 +2969,7 @@ const response = await fetch(
             }}
           >
             <Bike className="h-5 w-5" />
-            <span className="text-xs mt-1">{t('map.routes', 'Routes')}</span>
+            <span className="text-xs mt-1">{t('map.mobileNav.routes', 'Routes')}</span>
           </button>
           <button
             className={`flex flex-col items-center justify-center w-1/4 p-1 ${
@@ -2982,7 +2982,7 @@ const response = await fetch(
             }}
           >
             <Layers className="h-5 w-5" />
-            <span className="text-xs mt-1">{t('map.mapList', 'Map/List')}</span>
+            <span className="text-xs mt-1">{t('map.mobileNav.mapList', 'Map/List')}</span>
           </button>
         </div>
       )}
