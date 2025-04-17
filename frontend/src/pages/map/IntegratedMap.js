@@ -1776,7 +1776,7 @@ const response = await fetch(
               >
                 <div className="flex items-center justify-center">
                   <MapPin className="h-4 w-4 mr-1" />
-                  {t('map.tabs.pois', 'POIs')}
+                  {t('map.pointsOfInterest', 'POIs')}
                 </div>
               </button>
               <button 
@@ -1785,7 +1785,8 @@ const response = await fetch(
               >
                 <div className="flex items-center justify-center">
                   <Bike className="h-4 w-4 mr-1" />
-                  {t('map.tabs.bikeRoutes', 'Bike Routes')}
+                  console.log('Bike routes');
+                  {t('map.bikeRoutes', 'Bike Routes')}
                 </div>
               </button>
               <button 
@@ -1799,7 +1800,7 @@ const response = await fetch(
               >
                 <div className="flex items-center justify-center">
                   <Route className="h-4 w-4 mr-1" />
-                  {t('map.tabs.planner', 'Planner')}
+                  {t('map.planner.name', 'Planner')}
                 </div>
               </button>
             </div>
@@ -1814,7 +1815,7 @@ const response = await fetch(
                     <div className="relative">
                       <input
                         type="text"
-                        placeholder={t('map.search.poisPlaceholder', 'Search places...')}
+                        placeholder={t('map.search.placesPlaceholder', 'Search placejs...')}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full pl-10 pr-4 py-2 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#22c55e]"
@@ -2700,7 +2701,7 @@ const response = await fetch(
                 onClick={() => setActiveSidebarTab('pois')}
               >
                 <div className="flex items-center justify-center">
-                  <MapPin className="h-4 w-4 mr-1" />{t('map.tabs.pois', 'POIs')}
+                  <MapPin className="h-4 w-4 mr-1" />{t('map.pointsOfInterest', 'POIs')}
                 </div>
               </button>
               <button 
@@ -2709,7 +2710,7 @@ const response = await fetch(
               >
                 <div className="flex items-center justify-center">
                   <Bike className="h-4 w-4 mr-1" />
-                  {t('map.tabs.bikeRoutes', 'Bike Routes')}
+                  {t('map.bikeRoutes', 'Bike Routes')}
                 </div>
               </button>
               <button 
@@ -2723,7 +2724,7 @@ const response = await fetch(
               >
                 <div className="flex items-center justify-center">
                   <Route className="h-4 w-4 mr-1" />
-                  {t('map.tabs.planner', 'Planner')}
+                  {t('map.planner.name', 'Planner')}
                 </div>
               </button>
             </div>
@@ -2977,9 +2978,10 @@ const response = await fetch(
             }`}
             onClick={() => {
               setShowPois(!showPois);
-              setMapListView('map');
+              setMapListView((prev) => (prev === 'map' ? 'list' : 'map'));
               setIsSidebarOpen(false);
             }}
+            
           >
             <Layers className="h-5 w-5" />
             <span className="text-xs mt-1">{t('map.mobileNav.mapList', 'Map/List')}</span>

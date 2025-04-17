@@ -10,7 +10,7 @@ const Layout = () => {
       {/* User profile icon floating in top-right */}
       <Link
         to="/user-profile"
-        className="absolute top-4 right-4 z-50 bg-white border rounded-full p-2 shadow hover:bg-green-100 transition"
+        className="fixed bottom-20 left-4 z-50 bg-white border rounded-full p-2 shadow hover:bg-green-100 transition"
         title="My Profile"
       >
         <User className="w-5 h-5 text-green-600" />

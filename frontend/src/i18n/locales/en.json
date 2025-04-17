@@ -67,7 +67,8 @@
 
 "map": {
     "search": {
-      "placeholder": "Search places and routes..."
+      "placesPlaceholder": "Search places...",
+      "routesPlaceholder": "Search routes..."
     },
     "legend": "Legend",
     "pointsOfInterest": "Points of Interest",
@@ -118,6 +119,7 @@
       "noRoutes": "No bike routes available"
     },
     "planner": {
+      "name": "Plan Route",
       "options": "Route Options",
       "yourRoute": "Your Route",
       "summary": "Route Summary",
