@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Search, Menu, X, MapPin, Star, Camera, User, XCircle, ChevronRight } from 'lucide-react';
 import { AuthPage } from './LoginRegistrationPages'; 
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import LanguageSelector from '../components/LanguageSelector';
+import LanguageSelectionScreen from './LanguageSelectionScreen';
 
 // Import translations
 import enTranslations from '../i18n/locales/en.json';
 import itTranslations from '../i18n/locales/it.json';
-
 
 // Define exact color palette from provided images
 const colors = {
@@ -16,13 +17,13 @@ const colors = {
   brightGreen: '#31D33A',    // Bright green from logo
   lightGreen: '#8AE35A',     // Light green from palette
   darkGreen: '#3A6135',      // Dark green from palette
-  white: '#FFFFFF',           // White
-  honeydew:'rgb(199, 250, 202)',
+  white: '#FFFFFF',          // White
+  honeydew: 'rgb(199, 250, 202)', // Honeydew background color
 };
 
 const HomePage = () => {
-  // App flow states
-  const [currentStep, setCurrentStep] = useState('splash'); // 'splash', 'onboarding', 'login', 'main'
+  // App flow states - MODIFIED to show splash first, then language selection
+  const [currentStep, setCurrentStep] = useState('splash'); // 'splash', 'language', 'onboarding', 'login', 'main'
   const [onboardingPage, setOnboardingPage] = useState(0);
 
   // Animation states
@@ -65,6 +66,7 @@ const HomePage = () => {
 
   const handleLanguageChange = (language) => {
     setTranslations(language === 'en' ? enTranslations : itTranslations);
+    localStorage.setItem('preferredLanguage', language);
   };
 
   const openAuthModal = (mode = 'login') => {
@@ -86,11 +88,12 @@ const HomePage = () => {
     footer
   } = translations;
 
-  // Onboarding content
+  // Onboarding content based on selected language
   const onboardingContent = [
     {
-      title: "Smart Travel",
-      description: "Travel effortlessly with intelligent and intuitive maps always at your fingertips. Customise your trip according to your needs and desires with search filters and customisation features that allow you to find the experiences, places and venues that suit you best.",
+      title: features?.smartTravel?.title || "Smart Travel",
+      description: features?.smartTravel?.description || 
+        "Travel effortlessly with intelligent and intuitive maps always at your fingertips. Customise your trip according to your needs and desires with search filters and customisation features that allow you to find the experiences, places and venues that suit you best.",
       icon: <img 
         src="/board.jpeg" 
         alt="Road sign for San Lorenzo Nuovo" 
@@ -98,8 +101,9 @@ const HomePage = () => {
       />
     },
     {
-      title: "Try Our Experiences",
-      description: "You will get access to exclusive discounts, special offers, reserved benefits and promotions, fun challenges, and games dedicated to sustainability and discovering the territory.",
+      title: features?.experiences?.title || "Try Our Experiences",
+      description: features?.experiences?.description || 
+        "You will get access to exclusive discounts, special offers, reserved benefits and promotions, fun challenges, and games dedicated to sustainability and discovering the territory.",
       icon: <img 
         src="/sea.jpeg" 
         alt="Lake view with cloudy sky" 
@@ -107,8 +111,9 @@ const HomePage = () => {
       />
     },
     {
-      title: "Unlock Rewards & Special Perks",
-      description: "You will gain access to exclusive discounts, special offers, reserved benefits and promotions, fun challenges and games dedicated to sustainability and discovery.",
+      title: features?.rewards?.title || "Unlock Rewards & Special Perks",
+      description: features?.rewards?.description || 
+        "You will gain access to exclusive discounts, special offers, reserved benefits and promotions, fun challenges and games dedicated to sustainability and discovery.",
       icon: <img 
         src="/skywater.jpeg" 
         alt="Lake landscape with sky reflection" 
@@ -117,85 +122,56 @@ const HomePage = () => {
     }
   ];
 
-  // Splash Screen Component with Animation and Continue button
+  // Splash Screen Component - This is now the first screen as requested
   if (currentStep === 'splash') {
     return (
-      <div className="h-screen w-full flex flex-col items-center justify-center bg-honeydew overflow-hidden">
-        <div className={`relative flex flex-col items-center transition-all duration-1000 ease-in-out 
-                        ${splashAnimationComplete ? 'scale-105' : 'scale-100'}`}>
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-white overflow-hidden">
+        <div className="flex flex-col items-center">
+          {/* App Logo */}
+          <img 
+            src="/logo.png" 
+            alt="San Lorenzo Nuovo Logo" 
+            className="w-32 h-32 mb-4"
+          />
           
-           {/* Animated Logo */}
-<div className="relative w-80 h-80 mb-6" >
-  {/* Italian Logo */}
-  <div
-    className="absolute inset-0 flex items-center justify-center"
-    style={{ 
-      animation: 'fadeInOut 4s infinite',
-      opacity: 0
-    }}
-  >
-    <img 
-      src="/italLogo-removebg-preview.png"
-      alt="Italian Smart AppKey Logo"
-      className="w-4/5 h-4/5 object-contain"
-    />
-  </div>
-  
-  {/* English Logo */}
-  <div
-    className="absolute inset-0 flex items-center justify-center"
-    style={{ 
-      animation: 'fadeInOut 4s infinite 2s',
-      opacity: 0
-    }}
-  >
-    <img 
-      src="/EngLogo-removebg-preview.png"
-      alt="English Smart AppKey Logo"
-      className="w-4/5 h-4/5 object-contain"
-    />
-  </div>
-</div>
-          
-          <h1 className="text-2xl md:text-3xl font-bold text-center" style={{ color: colors.brightBlue }}>
-            San Lorenzo Nuovo<br />Smart AppKey
+          {/* App Name and Tagline */}
+          <h1 className="text-4xl font-bold text-center text-blue-600 mb-1">
+            San Lorenzo Nuovo
           </h1>
-          <p className="text-center mt-2" style={{ color: colors.brightBlue }}>
+          <h2 className="text-3xl font-bold text-center text-blue-600 mb-6">
+            Smart AppKey
+          </h2>
+          <p className="text-lg text-center text-blue-600 mb-10">
             Connection, the KEY to our community
           </p>
           
           {/* Continue button */}
           <button
-            onClick={() => setCurrentStep('onboarding')}
-            className="mt-10 px-8 py-3 rounded-full text-white font-medium transition-all transform hover:scale-105"
-            style={{ 
-              backgroundColor: colors.brightGreen,
-              opacity: splashAnimationComplete ? 1 : 0,
-              transition: 'opacity 0.5s ease-in-out 1s'
-            }}
+            onClick={() => setCurrentStep('language')}
+            className="mt-8 px-12 py-3 rounded-full text-white font-medium transition-all transform hover:scale-105"
+            style={{ backgroundColor: colors.brightGreen }}
           >
             Continue
           </button>
         </div>
         
-        {/* CSS Animations */}
-        <style jsx>{`
-          @keyframes rotate {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(10deg); }
-          }
-          
-          @keyframes fadeInOut {
-    0%, 45%, 100% { opacity: 0; }
-    5%, 40% { opacity: 1; }
-  }
-  
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-  }
-        `}</style>
+        {/* Footer */}
+        <div className="absolute bottom-6 text-center w-full">
+          <p className="text-sm text-gray-500">© 2025 SmartAppKey</p>
+        </div>
       </div>
+    );
+  }
+
+  // Language Selection Screen - Now the second screen after splash
+  if (currentStep === 'language') {
+    return (
+      <LanguageSelectionScreen 
+        onLanguageSelect={(lang) => {
+          handleLanguageChange(lang);
+          setCurrentStep('onboarding');
+        }}
+      />
     );
   }
 
@@ -242,7 +218,9 @@ const HomePage = () => {
                 }}
                 className="w-full py-2 sm:py-3 rounded-full text-white font-medium bg-green-500 hover:bg-green-600 transition-colors"
               >
-                {onboardingPage < onboardingContent.length - 1 ? 'Next' : 'Start'}
+                {onboardingPage < onboardingContent.length - 1 
+                  ? (localStorage.getItem('preferredLanguage') === 'it' ? 'Avanti' : 'Next')
+                  : (localStorage.getItem('preferredLanguage') === 'it' ? 'Inizia' : 'Start')}
               </button>
               
               {/* Skip button for first two screens */}
@@ -251,7 +229,7 @@ const HomePage = () => {
                   onClick={() => setCurrentStep('login')}
                   className="mt-3 text-gray-500 hover:text-gray-800"
                 >
-                  Skip
+                  {localStorage.getItem('preferredLanguage') === 'it' ? 'Salta' : 'Skip'}
                 </button>
               )}
             </div>
@@ -261,7 +239,7 @@ const HomePage = () => {
     );
   }
 
-  // Login/Registration Modal - Enhanced for mobile
+  // Login/Registration Modal
   if (currentStep === 'login') {
     return (
       <div className="fixed inset-0 bg-white z-50 flex items-center justify-center p-2 sm:p-4 animate-fadeIn">
@@ -395,7 +373,7 @@ const HomePage = () => {
         )}
       </nav>
 
-      {/* Hero Section - Updated with better mobile responsiveness */}
+      {/* Hero Section */}
       <div className="relative bg-gray-100 animate-fadeIn">
         <div className="h-64 sm:h-80 md:h-96 lg:h-[32rem] w-full overflow-hidden">
           <img 
@@ -464,11 +442,11 @@ const HomePage = () => {
                 <div className="flex items-center mb-2">
                   <MapPin className="h-4 w-4 sm:h-5 sm:w-5 mr-2" style={{ color: colors.brightGreen }} />
                   <h3 className="text-base sm:text-lg font-semibold" style={{ color: colors.brightBlue }}>
-                    Smart Travel
+                    {features.smartTravel?.title || "Smart Travel"}
                   </h3>
                 </div>
                 <p className="text-sm sm:text-base text-gray-600">
-                  Travel effortlessly with intelligent and intuitive maps always at your fingertips. Customise your trip according to your needs and desires with search filters and customisation features that allow you to find the experiences, places and venues that suit you best.
+                  {features.smartTravel?.description || "Travel effortlessly with intelligent and intuitive maps always at your fingertips. Customise your trip according to your needs and desires with search filters and customisation features that allow you to find the experiences, places and venues that suit you best."}
                 </p>
               </div>
             </div>
@@ -490,11 +468,11 @@ const HomePage = () => {
                 <div className="flex items-center mb-2">
                   <Star className="h-4 w-4 sm:h-5 sm:w-5 mr-2" style={{ color: colors.brightGreen }} />
                   <h3 className="text-base sm:text-lg font-semibold" style={{ color: colors.brightBlue }}>
-                    Try Our Experiences
+                    {features.experiences?.title || "Try Our Experiences"}
                   </h3>
                 </div>
                 <p className="text-sm sm:text-base text-gray-600">
-                  You will get access to exclusive discounts, special offers, reserved benefits and promotions, fun challenges, and games dedicated to sustainability and discovering the territory.
+                  {features.experiences?.description || "You will get access to exclusive discounts, special offers, reserved benefits and promotions, fun challenges, and games dedicated to sustainability and discovering the territory."}
                 </p>
               </div>
             </div>
@@ -516,11 +494,11 @@ const HomePage = () => {
                 <div className="flex items-center mb-2">
                   <User className="h-4 w-4 sm:h-5 sm:w-5 mr-2" style={{ color: colors.brightGreen }} />
                   <h3 className="text-base sm:text-lg font-semibold" style={{ color: colors.brightBlue }}>
-                    Unlock Rewards & Special Perks
+                    {features.rewards?.title || "Unlock Rewards & Special Perks"}
                   </h3>
                 </div>
                 <p className="text-sm sm:text-base text-gray-600">
-                  You will gain access to exclusive discounts, special offers, reserved benefits and promotions, fun challenges and games dedicated to sustainability and discovery.
+                  {features.rewards?.description || "You will gain access to exclusive discounts, special offers, reserved benefits and promotions, fun challenges and games dedicated to sustainability and discovery."}
                 </p>
               </div>
             </div>

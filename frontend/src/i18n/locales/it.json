@@ -1,67 +1,164 @@
 {
-    "header": {
-      "home": "Home",
+  "header": {
+    "home": "Home",
+    "destinations": "Destinazioni",
+    "experiences": "Esperienze",
+    "rewards": "Premi",
+    "signin": "Accedi",
+    "signup": "Registrati",
+    "searchPlaceholder": "Dove vorresti andare?"
+  },
+  "hero": {
+    "welcome": "Benvenuto a Smart Travel",
+    "description": "Scopri tutte le meraviglie del territorio, dalle destinazioni più conosciute ai tesori più nascosti. Lasciati guidare dai consigli dei locali, dalle guide interattive e dai suggerimenti personalizzati dedicati a te per un viaggio indimenticabile e coinvolgente.",
+    "exploreNow": "Esplora Ora"
+  },
+  "features": {
+    "title": "Smart Travel con Consigli Locali",
+    "subtitle": "Naviga senza sforzo con mappe intelligenti altamente intuitive, suggerimenti personalizzati in tempo reale e approfondimenti di viaggio basati su AI.",
+    "smartTravel": {
+      "title": "Smart Travel",
+      "description": "Viaggia senza sforzo con mappe intelligenti e intuitive sempre a portata di mano. Personalizza il tuo viaggio in base alle tue esigenze e desideri con filtri di ricerca e funzionalità di personalizzazione che ti permettono di trovare le esperienze, i luoghi e le sedi che ti si addicono meglio."
+    },
+    "experiences": {
+      "title": "Prova le Nostre Esperienze",
+      "description": "Avrai accesso a sconti esclusivi, offerte speciali, benefici riservati e promozioni, sfide divertenti e giochi dedicati alla sostenibilità e alla scoperta del territorio."
+    },
+    "rewards": {
+      "title": "Sblocca Premi e Vantaggi Speciali",
+      "description": "Otterrai accesso a sconti esclusivi, offerte speciali, benefici riservati e promozioni, sfide divertenti e giochi dedicati alla sostenibilità e alla scoperta."
+    }
+  },
+  "testimonials": {
+    "title": "Cosa Dicono i Nostri Viaggiatori",
+    "subtitle": "Leggi le esperienze dei viaggiatori che hanno esplorato con le nostre guide Smart Travel.",
+    "quote": "La funzionalità di approfondimenti locali è stata incredibile! Ho scoperto posti fantastici che non avrei mai trovato da solo. Questa app ha reso il mio viaggio davvero indimenticabile."
+  },
+  "newsletter": {
+    "title": "Rimani Aggiornato",
+    "subtitle": "Iscriviti alla nostra newsletter per consigli di viaggio e offerte esclusive.",
+    "placeholder": "Il tuo indirizzo email",
+    "button": "Iscriviti"
+  },
+  "footer": {
+    "description": "Il tuo compagno di viaggio definitivo con approfondimenti locali e raccomandazioni personalizzate.",
+    "explore": "Esplora",
+    "company": "Azienda",
+    "support": "Supporto",
+    "links": {
       "destinations": "Destinazioni",
       "experiences": "Esperienze",
-      "rewards": "Premi",
-      "signin": "Accedi",
-      "signup": "Registrati",
-      "searchPlaceholder": "Dove vorresti andare?"
+      "travelGuides": "Guide di Viaggio",
+      "localInsights": "Approfondimenti Locali",
+      "aboutUs": "Chi Siamo",
+      "careers": "Carriere",
+      "blog": "Blog",
+      "press": "Stampa",
+      "helpCenter": "Centro Assistenza",
+      "contactUs": "Contattaci",
+      "privacyPolicy": "Informativa sulla Privacy",
+      "termsOfService": "Termini di Servizio"
+    }
+  },
+  "language": {
+    "en": "Inglese",
+    "it": "Italiano"
+  },
+  "map": {
+    "search": {
+      "placeholder": "Cerca luoghi e percorsi..."
     },
-    "hero": {
-      "welcome": "Benvenuto a Smart Travel",
-      "description": "Scopri tutte le meraviglie del territorio, dalle destinazioni più conosciute ai tesori più nascosti. Lasciati guidare dai consigli dei locali, dalle guide interattive e dai suggerimenti personalizzati dedicati a te per un viaggio indimenticabile e coinvolgente.",
-      "exploreNow": "Esplora Ora"
+    "legend": "Legenda",
+    "pointsOfInterest": "Punti di Interesse",
+    "bikeRoutes": "Percorsi Ciclistici",
+    "navigation": {
+      "title": "Indicazioni Passo-Passo"
     },
-    "features": {
-      "title": "Smart Travel con Consigli Locali",
-      "subtitle": "Naviga senza sforzo con mappe intelligenti altamente intuitive, suggerimenti personalizzati in tempo reale e approfondimenti di viaggio basati su AI.",
-      "smartTravel": {
-        "title": "Smart Travel",
-        "description": "Viaggia senza sforzo con mappe intelligenti e intuitive sempre a portata di mano. Personalizza il tuo viaggio in base alle tue esigenze e desideri con filtri di ricerca e funzionalità di personalizzazione che ti permettono di trovare le esperienze, i luoghi e le sedi che ti si addicono meglio."
+    "poi": {
+      "categories": {
+        "business": "Attività",
+        "cultural": "Culturale",
+        "landscape": "Paesaggio",
+        "religious": "Religioso",
+        "landscape_religious": "Paesaggio Religioso",
+        "default": "Punto di Interesse"
       },
-      "experiences": {
-        "title": "Prova le Nostre Esperienze",
-        "description": "Avrai accesso a sconti esclusivi, offerte speciali, benefici riservati e promozioni, sfide divertenti e giochi dedicati alla sostenibilità e alla scoperta del territorio."
+      "details": {
+        "description": "Descrizione",
+        "showItalian": "Mostra descrizione italiana",
+        "location": "Posizione",
+        "planRoute": "Pianifica un Percorso da Qui",
+        "starting": "Punto di Partenza",
+        "destination": "Destinazione",
+        "waypoint": "Tappa",
+        "noImage": "Nessuna immagine disponibile",
+        "backToList": "Torna alla lista"
       },
-      "rewards": {
-        "title": "Sblocca Premi e Vantaggi Speciali",
-        "description": "Otterrai accesso a sconti esclusivi, offerte speciali, benefici riservati e promozioni, sfide divertenti e giochi dedicati alla sostenibilità e alla scoperta."
-      }
+      "noResults": "Nessun luogo trovato corrispondente a",
+      "noPlaces": "Nessun punto di interesse disponibile"
     },
-    "testimonials": {
-      "title": "Cosa Dicono i Nostri Viaggiatori",
-      "subtitle": "Leggi le esperienze dei viaggiatori che hanno esplorato con le nostre guide Smart Travel.",
-      "quote": "La funzionalità di approfondimenti locali è stata incredibile! Ho scoperto posti fantastici che non avrei mai trovato da solo. Questa app ha reso il mio viaggio davvero indimenticabile."
+    "routes": {
+      "display": {
+        "showAll": "Mostra Tutti",
+        "hideAll": "Nascondi Tutti",
+        "routesVisible": "Percorsi Visibili",
+        "routesHidden": "Percorsi Nascosti"
+      },
+      "details": {
+        "distance": "Distanza",
+        "elevation": "Dislivello",
+        "maxElevation": "Elevazione Massima",
+        "minElevation": "Elevazione Minima",
+        "downloadGpx": "Scarica GPX",
+        "navigate": "Naviga Questo Percorso",
+        "backToRoutes": "Torna ai percorsi"
+      },
+      "noResults": "Nessun percorso corrisponde ai tuoi filtri",
+      "noRoutes": "Nessun percorso ciclistico disponibile"
     },
-    "newsletter": {
-      "title": "Rimani Aggiornato",
-      "subtitle": "Iscriviti alla nostra newsletter per consigli di viaggio e offerte esclusive.",
-      "placeholder": "Il tuo indirizzo email",
-      "button": "Iscriviti"
+    "planner": {
+      "options": "Opzioni Percorso",
+      "yourRoute": "Il Tuo Percorso",
+      "summary": "Riepilogo Percorso",
+      "walking": "A Piedi",
+      "cycling": "In Bicicletta",
+      "shortest": "Più Breve",
+      "fastest": "Più Veloce",
+      "enableMapClick": "Abilita Clic sulla Mappa",
+      "disableMapClick": "Disabilita Clic sulla Mappa",
+      "clear": "Cancella",
+      "export": "Esporta",
+      "selectPoints": "Seleziona punti sulla mappa per creare un percorso",
+      "addWaypoint": "Aggiungi Tappa",
+      "estimatedTime": "Tempo Stimato",
+      "routeAlternatives": "Alternative di Percorso",
+      "startPlanning": "Inizia a Pianificare sulla Mappa",
+      "clickAnywhere": "Clicca ovunque sulla mappa per impostare"
     },
-    "footer": {
-      "description": "Il tuo compagno di viaggio definitivo con approfondimenti locali e raccomandazioni personalizzate.",
-      "explore": "Esplora",
-      "company": "Azienda",
-      "support": "Supporto",
-      "links": {
-        "destinations": "Destinazioni",
-        "experiences": "Esperienze",
-        "travelGuides": "Guide di Viaggio",
-        "localInsights": "Approfondimenti Locali",
-        "aboutUs": "Chi Siamo",
-        "careers": "Carriere",
-        "blog": "Blog",
-        "press": "Stampa",
-        "helpCenter": "Centro Assistenza",
-        "contactUs": "Contattaci",
-        "privacyPolicy": "Informativa sulla Privacy",
-        "termsOfService": "Termini di Servizio"
-      }
+    "difficulty": {
+      "easy": "Facile",
+      "medium": "Media",
+      "hard": "Difficile"
     },
-    "language": {
-      "en": "Inglese",
-      "it": "Italiano"
+    "filter": {
+      "filter": "Filtro",
+      "all": "Tutti",
+      "category": "Categoria",
+      "difficulty": "Difficoltà",
+      "roadType": "Tipo di Strada",
+      "show": "Mostra sulla Mappa"
+    },
+    "mobileNav": {
+      "shop": "Negozio",
+      "experiences": "Esperienze",
+      "routes": "Percorsi",
+      "profile": "Profilo",
+      "mapList": "Mappa/Lista"
+    },
+    "loading": {
+      "mapData": "Caricamento dati mappa...",
+      "routeData": "Caricamento dati percorso...",
+      "calculating": "Calcolo percorso in corso..."
     }
   }
+}

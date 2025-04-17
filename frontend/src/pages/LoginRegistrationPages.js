@@ -1,16 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapPin, ChevronLeft, X, Mail, Eye, EyeOff } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import Header from './Header';
 import BusinessTypeStep from './BusinessTypeStep';
 
 // Common Logo Header Component to reuse across all screens
-const LogoHeader = () => {
+const LogoHeader = ({ currentLanguage }) => {
   return (
     <div className="flex items-center justify-center mb-6">
       <Link to="/" className="flex items-center">
         <img 
-          src="/logo.png" 
+          src={currentLanguage === 'it' ? "/italLogo-removebg-preview.png" : "/logo.png"} 
           alt="San Lorenzo Nuovo Logo" 
           className="h-16 w-auto mr-3" 
         />
@@ -24,6 +24,15 @@ export const AuthPage = ({ initialView = 'login', onClose }) => {
   const [showRegistration, setShowRegistration] = useState(initialView === 'signup');
   const [showLogin, setShowLogin] = useState(initialView === 'login');
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [currentLanguage, setCurrentLanguage] = useState('en');
+
+  // Load the language from localStorage when component mounts
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem('preferredLanguage');
+    if (savedLanguage) {
+      setCurrentLanguage(savedLanguage);
+    }
+  }, []);
 
   const handleSignUpClick = () => {
     setShowLogin(false);
@@ -62,6 +71,7 @@ export const AuthPage = ({ initialView = 'login', onClose }) => {
               onSignUpClick={handleSignUpClick}
               onClose={onClose}
               registrationSuccess={registrationSuccess}
+              currentLanguage={currentLanguage}
             />
           )}
           
@@ -70,6 +80,7 @@ export const AuthPage = ({ initialView = 'login', onClose }) => {
               onLoginClick={handleLoginClick}
               onClose={onClose}
               onRegistrationSuccess={handleRegistrationSuccess}
+              currentLanguage={currentLanguage}
             />
           )}
         </div>
@@ -78,8 +89,8 @@ export const AuthPage = ({ initialView = 'login', onClose }) => {
   );
 };
 
-// Login Page Component
-const LoginPage = ({ onClose, onSignUpClick, registrationSuccess }) => {
+// Login Page Component - Modified to support languages
+const LoginPage = ({ onClose, onSignUpClick, registrationSuccess, currentLanguage }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
@@ -90,6 +101,25 @@ const LoginPage = ({ onClose, onSignUpClick, registrationSuccess }) => {
   const [error, setError] = useState(null);
   const [accountNotFound, setAccountNotFound] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // Text translations based on language
+  const texts = {
+    welcomeBack: currentLanguage === 'it' ? 'Bentornato!' : 'Welcome Back!',
+    signInPrompt: currentLanguage === 'it' ? 'Accedi al tuo account' : 'Please sign in to your account',
+    accountCreated: currentLanguage === 'it' ? 'Account creato con successo! Accedi con le tue credenziali.' : 'Account created successfully! Please log in with your credentials.',
+    noAccountFound: currentLanguage === 'it' ? 'Nessun account trovato con questo indirizzo email. Si prega di creare un account.' : 'No account found with this email address. Please create an account first.',
+    emailLabel: currentLanguage === 'it' ? 'Indirizzo email' : 'Email address',
+    passwordLabel: currentLanguage === 'it' ? 'Password' : 'Password',
+    rememberMe: currentLanguage === 'it' ? 'Ricordami' : 'Remember me',
+    forgotPassword: currentLanguage === 'it' ? 'Password dimenticata?' : 'Forgot Password?',
+    logIn: currentLanguage === 'it' ? 'Accedi' : 'Log in',
+    loggingIn: currentLanguage === 'it' ? 'Accesso in corso...' : 'Logging in...',
+    createAccount: currentLanguage === 'it' ? 'Crea un account' : 'Create an Account',
+    or: currentLanguage === 'it' ? 'O' : 'OR',
+    explore: currentLanguage === 'it' ? 'Esplora' : 'Explore',
+    noAccount: currentLanguage === 'it' ? 'Non hai un account?' : 'Don\'t have an account?',
+    signUp: currentLanguage === 'it' ? 'Registrati' : 'Sign up'
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -141,7 +171,6 @@ const LoginPage = ({ onClose, onSignUpClick, registrationSuccess }) => {
   
       const data = await response.json();
       console.log("Login response:", data);
-      
       if (response.ok) {
         console.log("Login successful:", data);
         
@@ -190,15 +219,15 @@ const LoginPage = ({ onClose, onSignUpClick, registrationSuccess }) => {
   return (
     <div className="flex flex-col items-center px-6 py-8">
       {/* Logo */}
-      <LogoHeader />
+      <LogoHeader currentLanguage={currentLanguage} />
 
-      <h1 className="text-xl font-bold text-gray-800 mb-1">Welcome Back!</h1>
-      <p className="text-sm text-gray-500 mb-6">Please sign in to your account</p>
+      <h1 className="text-xl font-bold text-gray-800 mb-1">{texts.welcomeBack}</h1>
+      <p className="text-sm text-gray-500 mb-6">{texts.signInPrompt}</p>
       
       {/* Success message after registration */}
       {registrationSuccess && (
         <div className="bg-green-100 border border-green-300 text-green-700 px-4 py-2 rounded-md mb-4 text-xs w-full">
-          Account created successfully! Please log in with your credentials.
+          {texts.accountCreated}
         </div>
       )}
       
@@ -212,7 +241,7 @@ const LoginPage = ({ onClose, onSignUpClick, registrationSuccess }) => {
       {/* Account not found message */}
       {accountNotFound && (
         <div className="bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-2 rounded-md mb-4 text-xs w-full">
-          No account found with this email address. Please create an account first.
+          {texts.noAccountFound}
         </div>
       )}
       
@@ -227,7 +256,7 @@ const LoginPage = ({ onClose, onSignUpClick, registrationSuccess }) => {
             type="email"
             required
             className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-            placeholder="Email address"
+            placeholder={texts.emailLabel}
             value={formData.email}
             onChange={handleChange}
             disabled={isLoading}
@@ -247,7 +276,7 @@ const LoginPage = ({ onClose, onSignUpClick, registrationSuccess }) => {
             type={showPassword ? "text" : "password"}
             required
             className="w-full pl-10 pr-10 py-3 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-            placeholder="Password"
+            placeholder={texts.passwordLabel}
             value={formData.password}
             onChange={handleChange}
             disabled={isLoading}
@@ -277,12 +306,12 @@ const LoginPage = ({ onClose, onSignUpClick, registrationSuccess }) => {
               disabled={isLoading}
             />
             <label htmlFor="remember-me" className="ml-2 text-gray-500">
-              Remember me
+              {texts.rememberMe}
             </label>
           </div>
           
           <a href="#" className="text-green-500 hover:underline">
-            Forgot Password?
+            {texts.forgotPassword}
           </a>
         </div>
         
@@ -291,7 +320,7 @@ const LoginPage = ({ onClose, onSignUpClick, registrationSuccess }) => {
           className={`w-full bg-green-500 text-white py-3 rounded-full font-semibold hover:bg-green-600 transition-colors ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
           disabled={isLoading}
         >
-          {isLoading ? 'Logging in...' : 'Log in'}
+          {isLoading ? texts.loggingIn : texts.logIn}
         </button>
         
         {accountNotFound && (
@@ -301,14 +330,14 @@ const LoginPage = ({ onClose, onSignUpClick, registrationSuccess }) => {
             className="w-full bg-gray-500 text-white py-3 rounded-full font-semibold hover:bg-gray-600 transition-colors"
             disabled={isLoading}
           >
-            Create an Account
+            {texts.createAccount}
           </button>
         )}
       </form>
       
       <div className="w-full text-center text-xs text-gray-500 my-4 flex items-center justify-center">
         <div className="flex-grow border-t border-gray-200 mr-4"></div>
-        <span>OR</span>
+        <span>{texts.or}</span>
         <div className="flex-grow border-t border-gray-200 ml-4"></div>
       </div>
       
@@ -351,26 +380,26 @@ const LoginPage = ({ onClose, onSignUpClick, registrationSuccess }) => {
         className="w-full bg-indigo-900 text-white py-3 rounded-full font-semibold mt-6"
         onClick={() => navigate('/explore')}
       >
-        Explore
+        {texts.explore}
       </button>
       
       <div className="text-center text-xs text-gray-500 mt-6">
-        Don't have an account? 
+        {texts.noAccount} 
         <button 
           type="button"
           onClick={onSignUpClick}
           className="ml-2 text-green-500 hover:underline"
           disabled={isLoading}
         >
-          Sign up
+          {texts.signUp}
         </button>
       </div>
     </div>
   );
 };
 
-// Main Registration Flow Component
-const RegistrationFlow = ({ onLoginClick, onClose, onRegistrationSuccess }) => {
+// Main Registration Flow Component - Modified to support languages
+const RegistrationFlow = ({ onLoginClick, onClose, onRegistrationSuccess, currentLanguage }) => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -421,6 +450,7 @@ const RegistrationFlow = ({ onLoginClick, onClose, onRegistrationSuccess }) => {
             updateData={updateRegistrationData} 
             onNext={nextStep} 
             onLoginClick={onLoginClick || (() => setIsLoginModalOpen(true))}
+            currentLanguage={currentLanguage}
           />
         );
       case 2:
@@ -430,6 +460,7 @@ const RegistrationFlow = ({ onLoginClick, onClose, onRegistrationSuccess }) => {
             updateData={updateRegistrationData} 
             onNext={nextStep} 
             onPrev={prevStep}
+            currentLanguage={currentLanguage}
           />
         );
       case 3:
@@ -439,6 +470,7 @@ const RegistrationFlow = ({ onLoginClick, onClose, onRegistrationSuccess }) => {
             updateData={updateRegistrationData} 
             onNext={nextStep} 
             onPrev={prevStep}
+            currentLanguage={currentLanguage}
           />
         );
       case 4:
@@ -450,6 +482,7 @@ const RegistrationFlow = ({ onLoginClick, onClose, onRegistrationSuccess }) => {
               updateData={updateRegistrationData} 
               onPrev={prevStep}
               onRegistrationSuccess={handleRegistrationSuccess}
+              currentLanguage={currentLanguage}
             />
           );
         } else {
@@ -459,6 +492,7 @@ const RegistrationFlow = ({ onLoginClick, onClose, onRegistrationSuccess }) => {
               updateData={updateRegistrationData} 
               onPrev={prevStep}
               onRegistrationSuccess={handleRegistrationSuccess}
+              currentLanguage={currentLanguage}
             />
           );
         }
@@ -484,6 +518,7 @@ const RegistrationFlow = ({ onLoginClick, onClose, onRegistrationSuccess }) => {
               onSignUpClick={() => {
                 setIsLoginModalOpen(false);
               }}
+              currentLanguage={currentLanguage}
             />
           </div>
         </div>
@@ -496,556 +531,4 @@ const RegistrationFlow = ({ onLoginClick, onClose, onRegistrationSuccess }) => {
       </div>
     </div>
   );
-};
-
-// Step 1: Name Input
-const NameStep = ({ data, updateData, onNext, onLoginClick }) => {
-  const [firstName, setFirstName] = useState(data.firstName);
-  const [lastName, setLastName] = useState(data.lastName);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (firstName && lastName) {
-      updateData({ firstName, lastName });
-      onNext();
-    }
-  };
-
-  return (
-    <div className="px-4 py-4 sm:py-6 md:p-8 h-full flex flex-col justify-between">
-      <div>
-        {/* Added LogoHeader component */}
-        <LogoHeader />
-        
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 text-center">
-          Registration For Customer
-        </h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-            <input
-              type="text"
-              placeholder="First Name"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              required
-              className="w-full px-3 sm:px-4 py-3 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-            />
-            <input
-              type="text"
-              placeholder="Last Name"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              required
-              className="w-full px-3 sm:px-4 py-3 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-            />
-          </div>
-          <div className="item-bottom">
-          <button
-            type="submit"
-            className="w-full bg-green-500 text-white py-3 rounded-full font-semibold hover:bg-green-600 transition-colors"
-          >
-            Create Account
-          </button>
-          </div>
-        </form>
-      </div>
-      
-      <div className="text-center text-xs sm:text-sm text-gray-500 mt-4">
-        Already have an account? 
-        <button 
-          type="button" 
-          onClick={onLoginClick} 
-          className="ml-2 text-green-500 hover:underline"
-        >
-          Sign In
-        </button>
-      </div>
-    </div>
-  );
-};
-
-// Step 3: Email and Password
-// Step 3: Email and Password
-const EmailPasswordStep = ({ data, updateData, onNext, onPrev }) => {
-  const [email, setEmail] = useState(data.email);
-  const [password, setPassword] = useState(data.password);
-  const [confirmPassword, setConfirmPassword] = useState(data.confirmPassword);
-  const [error, setError] = useState(null);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [passwordTooShort, setPasswordTooShort] = useState(false);
-
-  const handlePasswordChange = (e) => {
-    const newPassword = e.target.value;
-    setPassword(newPassword);
-    // Check if password is less than 6 characters
-    setPasswordTooShort(newPassword.length > 0 && newPassword.length < 6);
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setError(null);
-    
-    // Validate password length
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters long");
-      return;
-    }
-    
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-    
-    if (email && password) {
-      updateData({ email, password, confirmPassword });
-      onNext();
-    }
-  };
-
-  return (
-    <div className="px-4 py-4 sm:py-6">
-      {/* Logo Header would be here */}
-      
-      <div className="flex items-center mb-4">
-        <button 
-          onClick={onPrev} 
-          className="mr-3 text-gray-500 hover:text-green-500"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
-          Email & Password
-        </h2>
-      </div>
-      
-      {error && (
-        <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-2 rounded-md mb-4 text-xs sm:text-sm">
-          {error}
-        </div>
-      )}
-      
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="relative">
-          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-            <Mail size={18} className="text-gray-400" />
-          </div>
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-          />
-        </div>
-        
-        <div className="space-y-1">
-          <div className="relative">
-            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-              </svg>
-            </div>
-            <input
-              type={showPassword ? "text" : "password"}
-              placeholder="Password (min 6 characters)"
-              value={password}
-              onChange={handlePasswordChange}
-              required
-              className={`w-full pl-10 pr-10 py-3 border ${passwordTooShort ? 'border-yellow-300 bg-yellow-50' : 'border-gray-200'} rounded-full focus:outline-none focus:ring-2 focus:ring-green-500 text-sm`}
-            />
-            <button
-              type="button"
-              className="absolute inset-y-0 right-3 flex items-center"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? (
-                <EyeOff size={18} className="text-gray-400" />
-              ) : (
-                <Eye size={18} className="text-gray-400" />
-              )}
-            </button>
-          </div>
-          {passwordTooShort && (
-            <p className="text-yellow-600 text-xs pl-3">
-              Password must be at least 6 characters long
-            </p>
-          )}
-        </div>
-        
-        <div className="relative">
-          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-            </svg>
-          </div>
-          <input
-            type={showConfirmPassword ? "text" : "password"}
-            placeholder="Confirm Password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-            className={`w-full pl-10 pr-10 py-3 border ${confirmPassword && password !== confirmPassword ? 'border-red-300 bg-red-50' : 'border-gray-200'} rounded-full focus:outline-none focus:ring-2 focus:ring-green-500 text-sm`}
-          />
-          <button
-            type="button"
-            className="absolute inset-y-0 right-3 flex items-center"
-            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-          >
-            {showConfirmPassword ? (
-              <EyeOff size={18} className="text-gray-400" />
-            ) : (
-              <Eye size={18} className="text-gray-400" />
-            )}
-          </button>
-        </div>
-        
-        <button
-          type="submit"
-          className="w-full bg-green-500 text-white py-3 rounded-full font-semibold hover:bg-green-600 transition-colors"
-        >
-          Continue
-        </button>
-      </form>
-    </div>
-  );
-};
-
-// Step 5: User Type Selection
-const UserTypeStep = ({ data, updateData, onNext, onPrev }) => {
-  const [userType, setUserType] = useState(data.userType);
-  const [error, setError] = useState(null);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setError(null);
-    
-    if (!userType) {
-      setError("Please select a user type");
-      return;
-    }
-    
-    // Store the UI-friendly version as 'displayUserType' - this preserves 'partner' for the UI
-    // But use the backend-compatible version in 'userType'
-    const backendUserType = userType === 'partner' ? 'business' : userType;
-    
-    updateData({ 
-      userType: backendUserType, 
-      displayUserType: userType // Save display version for UI consistency
-    });
-    
-    onNext();
-  };
-
-  return (
-    <div className="h-full px-4 py-4 sm:py-6">
-      {/* Added LogoHeader component */}
-      <LogoHeader />
-      
-      <div className="flex items-center mb-4">
-        <button 
-          onClick={onPrev} 
-          className="mr-3 text-gray-500 hover:text-green-500"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
-          Select User Type
-        </h2>
-      </div>
-      <p className="text-gray-500 mb-6 text-sm">
-        Let's Get Started. Pick Your User Type
-      </p>
-      
-      {error && (
-        <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-2 rounded-md mb-4 text-sm">
-          {error}
-        </div>
-      )}
-      
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-3 gap-4">
-          <button
-            type="button"
-            onClick={() => setUserType('resident')}
-            className={`p-4 bg-white border rounded-xl shadow-sm transition-all ${
-              userType === 'resident' 
-                ? 'border-green-500 ring-2 ring-green-100 shadow-md' 
-                : 'border-gray-200 hover:border-green-200'
-            }`}
-          >
-            <div className="text-center">
-              <img 
-                src="/resident.png" 
-                alt="Resident" 
-                className="w-12 h-12 mx-auto mb-3"
-              />
-              <h3 className="font-semibold text-sm text-gray-800">Resident</h3>
-              <p className="text-gray-500 text-xs mt-1">Living a simple life</p>
-            </div>
-          </button>
-          <button
-            type="button"
-            onClick={() => setUserType('tourist')}
-            className={`p-4 bg-white border rounded-xl shadow-sm transition-all ${
-              userType === 'tourist' 
-                ? 'border-green-500 ring-2 ring-green-100 shadow-md' 
-                : 'border-gray-200 hover:border-green-200'
-            }`}
-          >
-            <div className="text-center">
-              <img 
-                src="/tourist.png" 
-                alt="Tourist" 
-                className="w-12 h-12 mx-auto mb-3"
-              />
-              <h3 className="font-semibold text-sm text-gray-800">Tourist</h3>
-              <p className="text-gray-500 text-xs mt-1">Exploring places</p>
-            </div>
-          </button>
-          <button
-            type="button"
-            onClick={() => setUserType('partner')}
-            className={`p-4 bg-white border rounded-xl shadow-sm transition-all ${
-              userType === 'partner' 
-                ? 'border-green-500 ring-2 ring-green-100 shadow-md' 
-                : 'border-gray-200 hover:border-green-200'
-            }`}
-          >
-            <div className="text-center">
-              <img 
-                src="/Business.png" 
-                alt="Partner" 
-                className="w-12 h-12 mx-auto mb-3"
-              />
-              <h3 className="font-semibold text-sm text-gray-800">Partner</h3>
-              <p className="text-gray-500 text-xs mt-1">Managing services</p>
-            </div>
-          </button>
-        </div>
-        <button
-          type="submit"
-          className="w-full mt-4 bg-green-500 text-white py-3 rounded-full font-semibold hover:bg-green-600 transition-colors"
-        >
-          Continue
-        </button>
-      </form>
-    </div>
-  );
-};
-
-
-
-// Step 6: Interests Selection with Survey Link for non-partners
-const InterestsStep = ({ data, updateData, onPrev, onRegistrationSuccess }) => {
-  const [selectedInterests, setSelectedInterests] = useState(data.interests || []);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [registrationCompleted, setRegistrationCompleted] = useState(false);
-  const [showSurvey, setShowSurvey] = useState(false);
-  const navigate = useNavigate();
-
-  const interestOptions = [
-    'Local Cuisine', 'Street Food Tours', 'Coffee & Cafes', 'Museums & Galleries',
-    'Local Festivals', 'Historical Landmarks', 'Architecture Tours', 'Hiking & Trails',
-    'Beaches & Lakes', 'Parks & Gardens', 'Wildlife Watching', 'Live Music & Concerts',
-    'Local Markets & Fairs', 'Theatres & Shows', 'Sports Events', 'Spas & Retreats'
-  ];
-
-  const toggleInterest = (interest) => {
-    setSelectedInterests(prev => 
-      prev.includes(interest)
-        ? prev.filter(i => i !== interest)
-        : [...prev, interest]
-    );
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (selectedInterests.length === 0) {
-      setError('Please select at least one interest');
-      return;
-    }
-    
-    setIsLoading(true);
-    setError(null);
-    
-    // Add a default phone number since we removed that step
-    const updatedData = {
-      ...data,
-      interests: selectedInterests,
-      phoneNumber: "+1" + Math.floor(1000000000 + Math.random() * 9000000000)
-    };
-    
-    // Update local state
-    updateData(updatedData);
-    
-    try {
-      console.log("Submitting registration data:", updatedData);
-      
-      // Send data to backend
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedData),
-      });
-
-      const responseData = await response.json();
-      
-      if (response.ok) {
-        console.log("Registration successful:", responseData);
-        setRegistrationCompleted(true);
-        
-        // Store token if provided in the response
-        if (responseData.token) {
-          localStorage.setItem('token', responseData.token);
-        }
-        
-        // Show survey option for resident/tourist
-        setShowSurvey(true);
-      } else {
-        console.error("Registration failed:", responseData);
-        if (responseData.missingFields && responseData.missingFields.length > 0) {
-          setError(`Missing required fields: ${responseData.missingFields.join(', ')}`);
-        } else {
-          setError(responseData.message || 'Registration failed');
-        }
-      }
-    } catch (error) {
-      console.error('Registration error:', error);
-      setError('An error occurred during registration. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSurveyComplete = () => {
-    // After survey complete, redirect to explorer
-    navigate('/explorer');
-  };
-
-  const handleSkipSurvey = () => {
-    // Skip survey and go directly to explorer
-    navigate('/explorer');
-  };
-
-  const surveyIDs = {
-    resident: 'mKRpEg',
-    guest: 'w5VRlP',
-    partner: 'wgObKD'
-  };
-
-  const surveyID = surveyIDs[data.userType];
-
-  return (
-    <div className="px-4 py-4 sm:py-6">
-      <div className="flex items-center mb-4">
-        <button 
-          onClick={onPrev} 
-          className="mr-3 text-gray-500 hover:text-green-500"
-          disabled={isLoading || registrationCompleted}
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
-          {registrationCompleted ? "Registration Complete" : "Select Your Interests"}
-        </h2>
-      </div>
-      
-      {!registrationCompleted ? (
-        <>
-          <p className="text-gray-500 mb-4 text-sm">
-            What excites you? Pick your interests and start exploring!
-          </p>
-          
-          {error && (
-            <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-2 rounded-md mb-4 text-sm">
-              {error}
-            </div>
-          )}
-          
-          <form onSubmit={handleSubmit}>
-            <div className="h-56 overflow-y-auto pr-2 mb-4">
-              <div className="grid grid-cols-2 gap-3">
-                {interestOptions.map((interest) => (
-                  <button
-                    key={interest}
-                    type="button"
-                    onClick={() => toggleInterest(interest)}
-                    className={`py-3 border rounded-full text-sm font-medium transition-colors ${
-                      selectedInterests.includes(interest)
-                        ? 'bg-green-500 text-white border-green-500'
-                        : 'text-gray-600 border-gray-200 hover:bg-green-50'
-                    }`}
-                    disabled={isLoading}
-                  >
-                    {interest}
-                  </button>
-                ))}
-              </div>
-            </div>
-            
-            <button
-              type="submit"
-              className={`w-full bg-green-500 text-white py-3 rounded-full font-semibold hover:bg-green-600 transition-colors ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-              disabled={isLoading}
-            >
-              {isLoading ? 'Completing Registration...' : 'Complete Registration'}
-            </button>
-          </form>
-        </>
-      ) : showSurvey ? (
-        <div className="text-center py-10">
-          <div className="bg-green-100 border border-green-300 text-green-700 px-4 py-4 rounded-md mb-6 text-sm">
-            <p className="font-semibold mb-2">Account created successfully!</p>
-            <p>Take a quick survey to help us personalize your experience</p>
-          </div>
-          
-          <div className="space-y-4">
-            <button
-                data-tally-open={surveyID} data-tally-emoji-text="👋" data-tally-emoji-animation="wave"
-                //onClick={handleSurveyClick}
-                className="w-full bg-[#22c55e] text-white py-3 px-4 rounded-full font-semibold hover:bg-[#16a34a] transition-colors flex items-center justify-center"
-              >
-              Take Quick Survey
-            </button>
-            
-            <button
-              type="button"
-              onClick={handleSkipSurvey}
-              className="block w-full bg-gray-500 text-white py-3 rounded-full font-semibold hover:bg-gray-600 transition-colors"
-            >
-              Skip for Now
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="text-center py-10">
-          <div className="bg-green-100 border border-green-300 text-green-700 px-4 py-4 rounded-md mb-6 text-sm">
-            <p className="font-semibold mb-2">Account created successfully!</p>
-            <p>Redirecting you to the login page...</p>
-          </div>
-          <div className="flex justify-center">
-            <svg className="animate-spin h-8 w-8 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-export {
-  EmailPasswordStep,
-  UserTypeStep,
-  BusinessTypeStep,
-  InterestsStep
 };

@@ -63,5 +63,103 @@
   "language": {
     "en": "English",
     "it": "Italian"
+  },
+
+"map": {
+    "search": {
+      "placeholder": "Search places and routes..."
+    },
+    "legend": "Legend",
+    "pointsOfInterest": "Points of Interest",
+    "bikeRoutes": "Bike Routes",
+    "navigation": {
+      "title": "Turn-by-Turn Directions"
+    },
+    "poi": {
+      "categories": {
+        "business": "Business",
+        "cultural": "Cultural",
+        "landscape": "Landscape",
+        "religious": "Religious",
+        "landscape_religious": "Landscape Religious",
+        "default": "Point of Interest"
+      },
+      "details": {
+        "description": "Description",
+        "showItalian": "Show Italian description",
+        "location": "Location",
+        "planRoute": "Plan a Route From Here",
+        "starting": "Starting Point",
+        "destination": "Destination",
+        "waypoint": "Waypoint",
+        "noImage": "No image available",
+        "backToList": "Back to list"
+      },
+      "noResults": "No places found matching",
+      "noPlaces": "No points of interest available"
+    },
+    "routes": {
+      "display": {
+        "showAll": "Show All",
+        "hideAll": "Hide All",
+        "routesVisible": "Routes Visible",
+        "routesHidden": "Routes Hidden"
+      },
+      "details": {
+        "distance": "Distance",
+        "elevation": "Elevation Gain",
+        "maxElevation": "Max Elevation",
+        "minElevation": "Min Elevation",
+        "downloadGpx": "Download GPX",
+        "navigate": "Navigate This Route",
+        "backToRoutes": "Back to routes"
+      },
+      "noResults": "No routes match your filters",
+      "noRoutes": "No bike routes available"
+    },
+    "planner": {
+      "options": "Route Options",
+      "yourRoute": "Your Route",
+      "summary": "Route Summary",
+      "walking": "Walking",
+      "cycling": "Cycling",
+      "shortest": "Shortest",
+      "fastest": "Fastest",
+      "enableMapClick": "Enable Map Click",
+      "disableMapClick": "Disable Map Click",
+      "clear": "Clear",
+      "export": "Export",
+      "selectPoints": "Select points on the map to create a route",
+      "addWaypoint": "Add Waypoint",
+      "estimatedTime": "Estimated Time",
+      "routeAlternatives": "Route Alternatives",
+      "startPlanning": "Start Planning on Map",
+      "clickAnywhere": "Click anywhere on map to set"
+    },
+    "difficulty": {
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard"
+    },
+    "filter": {
+      "filter": "Filter",
+      "all": "All",
+      "category": "Category",
+      "difficulty": "Difficulty",
+      "roadType": "Road Type",
+      "show": "Show on Map"
+    },
+    "mobileNav": {
+      "shop": "Shop",
+      "experiences": "Experiences",
+      "routes": "Routes",
+      "profile": "Profile",
+      "mapList": "Map/List"
+    },
+    "loading": {
+      "mapData": "Loading map data...",
+      "routeData": "Loading route data...",
+      "calculating": "Calculating route..."
+    }
   }
 }

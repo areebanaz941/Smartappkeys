@@ -29,13 +29,46 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import * as turf from '@turf/turf';
 import TurnByTurnNavigation from './TurnByTurnNavigation';
+import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n';
 
 // Set your access token
 mapboxgl.accessToken = 'pk.eyJ1IjoibTJvdGVjaCIsImEiOiJjbTczbzU4aWQwMWdmMmpzY3N4ejJ3czlnIn0.fLDR4uG8kD8-g_IDM8ZPdQ';
 
-const IntegratedMap = ({ initialRouteId, initialPoiId, initialMode }) => {
+const IntegratedMap = ({ initialRouteId, initialPoiId, initialMode, currentLanguage }) => {
   const mapContainer = useRef(null);
   const [map, setMap] = useState(null);
+  
+  // Add useTranslation hook
+  const { t } = useTranslation();
+  
+  // Initialize language state
+  const [language, setLanguage] = useState(currentLanguage || 'en');
+  
+  // Update language when prop changes
+  useEffect(() => {
+    if (currentLanguage) {
+      setLanguage(currentLanguage);
+      i18n.changeLanguage(currentLanguage);
+    }
+  }, [currentLanguage]);
+  
+  // Watch for language changes in localStorage
+  useEffect(() => {
+    const handleLanguageChange = () => {
+      const savedLanguage = localStorage.getItem('preferredLanguage');
+      if (savedLanguage && savedLanguage !== language) {
+        setLanguage(savedLanguage);
+        i18n.changeLanguage(savedLanguage);
+      }
+    };
+    
+    window.addEventListener('storage', handleLanguageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleLanguageChange);
+    };
+  }, [language]);
   
   // Sidebar control
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Default to closed on mobile
@@ -337,7 +370,7 @@ const IntegratedMap = ({ initialRouteId, initialPoiId, initialMode }) => {
     // Initially set all POIs as visible
     setVisiblePois(new Set(pois.map(poi => poi._id)));
     
-  }, [map, pois]);
+  }, [map, pois, language]); // Added language dependency for marker refresh when language changes
   
   // Helper to convert POI coordinates to Mapbox format
   const getMapboxCoords = (poi) => {
@@ -365,6 +398,30 @@ const IntegratedMap = ({ initialRouteId, initialPoiId, initialMode }) => {
     return coords;
   };
   
+  // Function for getting localized POI name based on current language
+  const getLocalizedPoiName = (poi) => {
+    if (language.startsWith('it') && poi.name_it) {
+      return poi.name_it;
+    }
+    return poi.name_en;
+  };
+  
+  // Function for getting localized POI description based on current language
+  const getLocalizedPoiDescription = (poi) => {
+    if (language.startsWith('it') && poi.description_it) {
+      return poi.description_it;
+    }
+    return poi.description_en;
+  };
+  
+  // Function for getting localized POI type based on current language
+  const getLocalizedPoiType = (poi) => {
+    if (language.startsWith('it') && poi.type_it) {
+      return poi.type_it;
+    }
+    return poi.type_en;
+  };
+  
   // Add a POI marker to the map
   const addPoiMarker = (poi) => {
     if (!map) return null;
@@ -372,7 +429,7 @@ const IntegratedMap = ({ initialRouteId, initialPoiId, initialMode }) => {
     // Parse coordinates
     const coords = getMapboxCoords(poi);
     if (!coords) {
-      console.warn(`Invalid coordinates for POI: ${poi.name_en}`);
+      console.warn(`Invalid coordinates for POI: ${getLocalizedPoiName(poi)}`);
       return null;
     }
     
@@ -402,21 +459,22 @@ const IntegratedMap = ({ initialRouteId, initialPoiId, initialMode }) => {
     })
     .setHTML(`
       <div class="popup-content">
-        <h3 class="font-bold">${poi.name_en}</h3>
-        <p>${poi.type_en}</p>
+        <h3 class="font-bold">${getLocalizedPoiName(poi)}</h3>
+        <p>${getLocalizedPoiType(poi)}</p>
       </div>
     `);
     
     // Create marker with specific options to keep it fixed
-    const marker = new mapboxgl.Marker({
-      element: el,
-      anchor: 'bottom', // Anchor point at the bottom of the marker
-      pitchAlignment: 'map', // Align with map's pitch
-      rotationAlignment: 'map' // Align with map's rotation
-    })
-    .setLngLat(coords)
-    .setPopup(popup)
-    .addTo(map);
+    // Create marker with specific options to keep it fixed
+const marker = new mapboxgl.Marker({
+  element: el,
+  anchor: 'bottom', // Anchor point at the bottom of the marker
+  pitchAlignment: 'viewport', // This makes markers stay fixed relative to the viewport
+  rotationAlignment: 'viewport' // This keeps the orientation consistent
+})
+.setLngLat(coords)
+.setPopup(popup)
+.addTo(map);
     
     // Handle marker hover
     el.addEventListener('mouseenter', () => {
@@ -439,7 +497,7 @@ const IntegratedMap = ({ initialRouteId, initialPoiId, initialMode }) => {
           <div class="flex">
             <div class="mr-2 w-16 h-16 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
               ${poi.photo ? 
-                `<img src="${poi.photo}" alt="${poi.name_en}" class="w-full h-full object-cover" 
+                `<img src="${poi.photo}" alt="${getLocalizedPoiName(poi)}" class="w-full h-full object-cover" 
                  onerror="this.onerror=null;this.src='data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'64\\' height=\\'64\\' viewBox=\\'0 0 64 64\\'%3E%3Crect width=\\'64\\' height=\\'64\\' fill=\\'%23f1f1f1\\'/%3E%3Ctext x=\\'50%\\' y=\\'50%\\' font-family=\\'Arial\\' font-size=\\'8\\' text-anchor=\\'middle\\' fill=\\'%23999\\'%3ENo Image%3C/text%3E%3C/svg%3E';">` :
                 `<div class="w-full h-full flex items-center justify-center">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${poiColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
@@ -447,12 +505,12 @@ const IntegratedMap = ({ initialRouteId, initialPoiId, initialMode }) => {
               }
             </div>
             <div>
-              <h3 class="font-bold text-base">${poi.name_en}</h3>
+              <h3 class="font-bold text-base">${getLocalizedPoiName(poi)}</h3>
               <p class="text-sm text-gray-600 capitalize" style="color: ${poiColor}">
-                ${poi.category ? poi.category.replace('_', ' ') : poi.type_en}
+                ${poi.category ? poi.category.replace('_', ' ') : getLocalizedPoiType(poi)}
               </p>
-              ${poi.description_en ? 
-                `<p class="text-xs text-gray-500 mt-1 max-w-[200px] line-clamp-2">${poi.description_en}</p>` : 
+              ${getLocalizedPoiDescription(poi) ? 
+                `<p class="text-xs text-gray-500 mt-1 max-w-[200px] line-clamp-2">${getLocalizedPoiDescription(poi)}</p>` : 
                 ''
               }
             </div>
@@ -531,28 +589,28 @@ const IntegratedMap = ({ initialRouteId, initialPoiId, initialMode }) => {
     // Store the marker reference
     poiMarkersRef.current[poi._id] = marker;
 
-  return marker;
-};
+    return marker;
+  };
 
-const getHueRotation = (targetColor) => {
-  // This is a simplified approach - for more accurate colors,
-  // you might need a more sophisticated color transformation
-  
-  switch(targetColor) {
-    case '#3b82f6': // Blue
-      return '140deg'; // Rotate to blue
-    case '#8B4513': // Brown
-      return '30deg';  // Rotate to brown
-    case '#22c55e': // Green
-      return '0deg';   // No rotation needed for default green
-    case '#8B5CF6': // Purple
-      return '270deg'; // Rotate to purple
-    case '#1E5631': // Dark Green
-      return '-20deg'; // Slightly darker green
-    default:
-      return '0deg';   // Default no rotation
-  }
-};
+  const getHueRotation = (targetColor) => {
+    // This is a simplified approach - for more accurate colors,
+    // you might need a more sophisticated color transformation
+    
+    switch(targetColor) {
+      case '#3b82f6': // Blue
+        return '140deg'; // Rotate to blue
+      case '#8B4513': // Brown
+        return '30deg';  // Rotate to brown
+      case '#22c55e': // Green
+        return '0deg';   // No rotation needed for default green
+      case '#8B5CF6': // Purple
+        return '270deg'; // Rotate to purple
+      case '#1E5631': // Dark Green
+        return '-20deg'; // Slightly darker green
+      default:
+        return '0deg';   // Default no rotation
+    }
+  };
   
   // Update POI markers visibility based on filters
   useEffect(() => {
@@ -588,11 +646,9 @@ const getHueRotation = (targetColor) => {
     return pois.filter(poi => {
       // Apply search filter
       const matchesSearch = !searchQuery || 
-        poi.name_en?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        poi.name_it?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        poi.type_en?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        poi.type_it?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        poi.description_en?.toLowerCase().includes(searchQuery.toLowerCase());
+        getLocalizedPoiName(poi)?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        getLocalizedPoiType(poi)?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        getLocalizedPoiDescription(poi)?.toLowerCase().includes(searchQuery.toLowerCase());
       
       // Apply category filter
       const matchesCategory = poiCategoryFilter === 'all' || 
@@ -742,8 +798,7 @@ const getHueRotation = (targetColor) => {
     // Add source if it doesn't exist
     if (!map.getSource(sourceId)) {
       map.addSource(sourceId, {
-        type: 'geojson',
-        data: geoJson
+        type: 'geojson',data: geoJson
       });
       
       // Track the source for cleanup
@@ -838,7 +893,7 @@ const getHueRotation = (targetColor) => {
       .setHTML(`
         <div class="popup-content">
           <h3 class="font-bold">${route.name}</h3>
-          <p>${isStart ? 'Starting Point' :'End Point'}</p>
+          <p>${isStart ? t('map.startingPoint', 'Starting Point') : t('map.endPoint', 'End Point')}</p>
         </div>
       `);
       
@@ -1043,8 +1098,10 @@ const getHueRotation = (targetColor) => {
     })
     .setHTML(`
       <div class="popup-content">
-        <h3 class="font-bold">${point.name_en || 'Custom Point'}</h3>
-        <p>${index === 0 ? 'Starting Point' : (index === waypoints.length - 1 ? 'Destination' : `Waypoint ${index}`)}</p>
+        <h3 class="font-bold">${getLocalizedPoiName(point) || t('map.customPoint', 'Custom Point')}</h3>
+        <p>${index === 0 ? t('map.startingPoint', 'Starting Point') : 
+              (index === waypoints.length - 1 ? t('map.destination', 'Destination') : 
+               t('map.waypoint', 'Waypoint') + ` ${index}`)}</p>
       </div>
     `);
     
@@ -1078,15 +1135,17 @@ const getHueRotation = (targetColor) => {
   // Update markers when waypoints change
   useEffect(() => {
     renderWaypointMarkers();
-  }, [waypoints, map]);
+  }, [waypoints, map, language]);  // Added language dependency for marker refresh
   
   // Helper function to create a custom point object from map coordinates
   const createCustomPoint = (lngLat, index) => {
     const id = `custom-${Date.now()}-${index}`;
     return {
       _id: id,
-      name_en: index === 0 ? 'Starting Point' : (index === waypoints.length - 1 ? 'Destination' : `Waypoint ${index}`),
-      type_en: 'Custom Location',
+      name_en: index === 0 ? t('map.startingPoint', 'Starting Point') : 
+              (index === waypoints.length - 1 ? t('map.destination', 'Destination') : 
+               t('map.waypoint', 'Waypoint') + ` ${index}`),
+      type_en: t('map.customLocation', 'Custom Location'),
       coordinates: {
         lng: lngLat.lng,
         lat: lngLat.lat
@@ -1107,7 +1166,7 @@ const getHueRotation = (targetColor) => {
     
     // Move to next waypoint selection if needed
     if (currentWaypointIndex === 0) {
-      setError("Select your destination");
+      setError(t('map.selectDestination', "Select your destination"));
       setCurrentWaypointIndex(1);
     } else if (currentWaypointIndex === 1 && waypoints.length <= 2) {
       // If we're selecting the destination (second point)
@@ -1127,7 +1186,7 @@ const getHueRotation = (targetColor) => {
     
     // Move to next waypoint selection if needed
     if (currentWaypointIndex === 0) {
-      setError("Select your destination");
+      setError(t('map.selectDestination', "Select your destination"));
       setCurrentWaypointIndex(1);
     } else if (currentWaypointIndex === 1 && waypoints.length <= 2) {
       // If we're selecting the destination (second point)
@@ -1149,7 +1208,7 @@ const getHueRotation = (targetColor) => {
       // Convert all waypoints to coordinates strings
       const coordinatesStrings = points.map(point => {
         const coords = getMapboxCoords(point);
-        if (!coords) throw new Error(`Invalid coordinates for waypoint: ${point.name_en || 'Unknown'}`);
+        if (!coords) throw new Error(`Invalid coordinates for waypoint: ${getLocalizedPoiName(point) || 'Unknown'}`);
         return `${coords[0]},${coords[1]}`;
       });
       
@@ -1160,9 +1219,10 @@ const getHueRotation = (targetColor) => {
       const alternatives = preference === 'shortest' ? 'false' : 'true';
       
       // Make API call to Mapbox Directions API
-      const response = await fetch(
-        `https://api.mapbox.com/directions/v5/mapbox/${mode}/${coordinatesPath}?alternatives=${alternatives}&geometries=geojson&steps=true&access_token=${mapboxgl.accessToken}`
-      );
+    // Make API call to Mapbox Directions API
+const response = await fetch(
+  `https://api.mapbox.com/directions/v5/mapbox/${mode}/${coordinatesPath}?alternatives=${alternatives}&geometries=geojson&steps=true&language=${language}&access_token=${mapboxgl.accessToken}`
+);
       
       if (!response.ok) {
         throw new Error(`Directions API error: ${response.status}`);
@@ -1171,7 +1231,7 @@ const getHueRotation = (targetColor) => {
       const data = await response.json();
       
       if (data.code !== 'Ok' || !data.routes || data.routes.length === 0) {
-        throw new Error('No route found');
+        throw new Error(t('map.noRouteFound', 'No route found'));
       }
       
       // If we have multiple routes (alternatives)
@@ -1192,7 +1252,7 @@ const getHueRotation = (targetColor) => {
       
     } catch (error) {
       console.error('Error fetching route:', error);
-      setError(`Failed to get directions: ${error.message}`);
+      setError(`${t('map.failedToGetDirections', 'Failed to get directions')}: ${error.message}`);
     } finally {
       setIsRoutingLoading(false);
     }
@@ -1292,7 +1352,7 @@ const getHueRotation = (targetColor) => {
         {
           type: "Feature",
           properties: {
-            name: "Route",
+            name: t('map.route', 'Route'),
             mode: routeMode,
             distance: routeInfo.distance,
             duration: routeInfo.duration
@@ -1304,7 +1364,7 @@ const getHueRotation = (targetColor) => {
           return {
             type: "Feature",
             properties: {
-              name: waypoint.name_en || `Waypoint ${index + 1}`,
+              name: getLocalizedPoiName(waypoint) || `${t('map.waypoint', 'Waypoint')} ${index + 1}`,
               index: index,
               type: index === 0 ? "origin" : 
                     index === waypoints.length - 1 ? "destination" : 
@@ -1377,7 +1437,7 @@ const getHueRotation = (targetColor) => {
     newWaypoints.splice(newIndex, 0, null);
     setWaypoints(newWaypoints);
     
-    setError("Select the new waypoint");
+    setError(t('map.selectNewWaypoint', "Select the new waypoint"));
     setRouteSelectionStep(1);
     setMapClickEnabled(true);
   };
@@ -1405,7 +1465,7 @@ const getHueRotation = (targetColor) => {
     setWaypoints([null, null]); // Initial setup for origin and destination
     setCurrentWaypointIndex(0);
     setMapClickEnabled(true);
-    setError("Select your starting point");
+    setError(t('map.selectStartingPoint', "Select your starting point"));
     setActiveSidebarTab('planner');
     if (isMobileView) {
       setIsSidebarOpen(false); // Close sidebar on mobile when planning
@@ -1464,28 +1524,28 @@ const getHueRotation = (targetColor) => {
   
   // Format distance (meters to kilometers)
   const formatDistance = (meters) => {
-    if (!meters && meters !== 0) return 'N/A';
-    return (meters / 1000).toFixed(1) + ' km';
+    if (!meters && meters !== 0) return t('map.notAvailable', 'N/A');
+    return (meters / 1000).toFixed(1) + ' ' + t('map.km', 'km');
   };
   
   // Format duration (seconds to human-readable)
   const formatDuration = (seconds) => {
-    if (!seconds && seconds !== 0) return 'N/A';
+    if (!seconds && seconds !== 0) return t('map.notAvailable', 'N/A');
     
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     
     if (hours > 0) {
-      return `${hours} hr ${minutes} min`;
+      return `${hours} ${t('map.hr', 'hr')} ${minutes} ${t('map.min', 'min')}`;
     } else {
-      return `${minutes} min`;
+      return `${minutes} ${t('map.min', 'min')}`;
     }
   };
   
   // Format elevation (meters)
   const formatElevation = (meters) => {
-    if (!meters && meters !== 0) return 'N/A';
-    return Math.round(meters) + ' m';
+    if (!meters && meters !== 0) return t('map.notAvailable', 'N/A');
+    return Math.round(meters) + ' ' + t('map.m', 'm');
   };
   
   // Get POI categories for filter
@@ -1523,60 +1583,60 @@ const getHueRotation = (targetColor) => {
   const MapLegend = () => {
     return (
       <div className="hidden md:block absolute bottom-4 right-4 bg-white p-4 rounded-lg shadow-lg z-10">
-        <h3 className="text-sm font-medium mb-3">Legend</h3>
+        <h3 className="text-sm font-medium mb-3">{t('map.legend', 'Legend')}</h3>
         
         {/* POI Categories */}
         <div className="mb-4">
-          <h4 className="text-xs font-medium text-gray-500 mb-2">Points of Interest</h4>
+          <h4 className="text-xs font-medium text-gray-500 mb-2">{t('map.pointsOfInterest', 'Points of Interest')}</h4>
           <div className="space-y-2">
             <div className="flex items-center">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" className="mr-2">
                 <path fill="#3b82f6" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
               </svg>
-              <span className="text-xs">Business</span>
+              <span className="text-xs">{t('map.poi.categories.business', 'Business')}</span>
             </div>
             <div className="flex items-center">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" className="mr-2">
                 <path fill="#8B4513" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
               </svg>
-              <span className="text-xs">Cultural</span>
+              <span className="text-xs">{t('map.poi.categories.cultural', 'Cultural')}</span>
             </div>
             <div className="flex items-center">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" className="mr-2">
                 <path fill="#22c55e" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
               </svg>
-              <span className="text-xs">Landscape</span>
+              <span className="text-xs">{t('map.poi.categories.landscape', 'Landscape')}</span>
             </div>
             <div className="flex items-center">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" className="mr-2">
                 <path fill="#8B5CF6" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
               </svg>
-              <span className="text-xs">Religious</span>
+              <span className="text-xs">{t('map.poi.categories.religious', 'Religious')}</span>
             </div>
             <div className="flex items-center">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" className="mr-2">
                 <path fill="#1E5631" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
               </svg>
-              <span className="text-xs">Landscape Religious</span>
+              <span className="text-xs">{t('map.poi.categories.landscape_religious', 'Landscape Religious')}</span>
             </div>
           </div>
         </div>
         
         {/* Bike Routes */}
         <div>
-          <h4 className="text-xs font-medium text-gray-500 mb-2">Bike Routes</h4>
+          <h4 className="text-xs font-medium text-gray-500 mb-2">{t('map.bikeRoutes', 'Bike Routes')}</h4>
           <div className="space-y-2">
             <div className="flex items-center">
               <div className="w-4 h-4 rounded-full mr-2 bg-[#22c55e]"></div>
-              <span className="text-xs">Easy</span>
+              <span className="text-xs">{t('map.difficulty.easy', 'Easy')}</span>
             </div>
             <div className="flex items-center">
               <div className="w-4 h-4 rounded-full mr-2 bg-[#f59e0b]"></div>
-              <span className="text-xs">Medium</span>
+              <span className="text-xs">{t('map.difficulty.medium', 'Medium')}</span>
             </div>
             <div className="flex items-center">
               <div className="w-4 h-4 rounded-full mr-2 bg-[#ef4444]"></div>
-              <span className="text-xs">Hard</span>
+              <span className="text-xs">{t('map.difficulty.hard', 'Hard')}</span>
             </div>
           </div>
         </div>
@@ -1593,10 +1653,10 @@ const getHueRotation = (targetColor) => {
               <Link to="/" className="flex items-center">
                 <img 
                   src="/logo.png" 
-                  alt="San Lorenzo Nuovo Logo" 
+                  alt={t('map.logoAlt', 'San Lorenzo Nuovo Logo')}
                   className="h-12 w-auto mr-3" 
                 />
-                <span className="font-bold text-lg text-[#22c55e] hidden md:block">San Lorenzo Nuovo Explorer</span>
+                <span className="font-bold text-lg text-[#22c55e] hidden md:block">{t('map.appTitle', 'San Lorenzo Nuovo Explorer')}</span>
               </Link>
             </div>
             
@@ -1604,7 +1664,7 @@ const getHueRotation = (targetColor) => {
             <div className="relative w-full max-w-md mx-4 hidden md:block">
               <input
                 type="text"
-                placeholder="Search places and routes..."
+                placeholder={t('map.search.placeholder', 'Search places and routes...')}
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
@@ -1620,21 +1680,21 @@ const getHueRotation = (targetColor) => {
               <button 
                 className={`p-2 rounded-full hover:bg-gray-100 relative ${activeSidebarTab === 'planner' ? 'bg-gray-100' : ''}`}
                 onClick={startRoutePlanning}
-                title="Route Planner"
+                title={t('map.routePlanner', 'Route Planner')}
               >
                 <Route className="h-5 w-5 text-[#6b7280]" />
               </button>
               <button 
                 className={`p-2 rounded-full hover:bg-gray-100 ${showPois ? 'text-green-600' : 'text-gray-400'}`}
                 onClick={() => setShowPois(!showPois)}
-                title={showPois ? "Hide POIs" : "Show POIs"}
+                title={showPois ? t('map.hidePOIs', "Hide POIs") : t('map.showPOIs', "Show POIs")}
               >
                 <MapPin className="h-5 w-5" />
               </button>
               <button 
                 className={`p-2 rounded-full hover:bg-gray-100 ${showBikeRoutes ? 'text-blue-600' : 'text-gray-400'}`}
                 onClick={() => setShowBikeRoutes(!showBikeRoutes)}
-                title={showBikeRoutes ? "Hide Bike Routes" : "Show Bike Routes"}
+                title={showBikeRoutes ? t('map.hideBikeRoutes', "Hide Bike Routes") : t('map.showBikeRoutes', "Show Bike Routes")}
               >
                 <Bike className="h-5 w-5" />
               </button>
@@ -1670,7 +1730,7 @@ const getHueRotation = (targetColor) => {
           <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-80 z-20">
             <div className="text-center">
               <div className="w-12 h-12 border-4 border-[#22c55e] border-t-transparent rounded-full animate-spin mx-auto"></div>
-              <p className="mt-2 text-gray-600">Loading map data...</p>
+              <p className="mt-2 text-gray-600">{t('map.loadingMapData', 'Loading map data...')}</p>
             </div>
           </div>
         )}
@@ -1680,7 +1740,7 @@ const getHueRotation = (targetColor) => {
           <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-50 z-20">
             <div className="text-center bg-white p-4 rounded-lg shadow-md">
               <div className="w-10 h-10 border-4 border-[#3b82f6] border-t-transparent rounded-full animate-spin mx-auto"></div>
-              <p className="mt-2 text-gray-600">Loading route data...</p>
+              <p className="mt-2 text-gray-600">{t('map.loadingRouteData', 'Loading route data...')}</p>
             </div>
           </div>
         )}
@@ -1690,7 +1750,7 @@ const getHueRotation = (targetColor) => {
           <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-50 z-20">
             <div className="text-center bg-white p-4 rounded-lg shadow-md">
               <div className="w-10 h-10 border-4 border-[#f59e0b] border-t-transparent rounded-full animate-spin mx-auto"></div>
-              <p className="mt-2 text-gray-600">Calculating route...</p>
+              <p className="mt-2 text-gray-600">{t('map.calculatingRoute', 'Calculating route...')}</p>
             </div>
           </div>
         )}
@@ -1716,7 +1776,7 @@ const getHueRotation = (targetColor) => {
               >
                 <div className="flex items-center justify-center">
                   <MapPin className="h-4 w-4 mr-1" />
-                  POIs
+                  {t('map.tabs.pois', 'POIs')}
                 </div>
               </button>
               <button 
@@ -1725,7 +1785,7 @@ const getHueRotation = (targetColor) => {
               >
                 <div className="flex items-center justify-center">
                   <Bike className="h-4 w-4 mr-1" />
-                  Bike Routes
+                  {t('map.tabs.bikeRoutes', 'Bike Routes')}
                 </div>
               </button>
               <button 
@@ -1739,7 +1799,7 @@ const getHueRotation = (targetColor) => {
               >
                 <div className="flex items-center justify-center">
                   <Route className="h-4 w-4 mr-1" />
-                  Planner
+                  {t('map.tabs.planner', 'Planner')}
                 </div>
               </button>
             </div>
@@ -1754,7 +1814,7 @@ const getHueRotation = (targetColor) => {
                     <div className="relative">
                       <input
                         type="text"
-                        placeholder="Search places..."
+                        placeholder={t('map.search.poisPlaceholder', 'Search places...')}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full pl-10 pr-4 py-2 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#22c55e]"
@@ -1767,28 +1827,28 @@ const getHueRotation = (targetColor) => {
                   <div className="p-4 border-b">
                     <h3 className="font-medium text-[#1f2937] mb-3 flex items-center">
                       <Filter className="h-4 w-4 mr-1" />
-                      POI Filters
+                      {t('map.poiFilters', 'POI Filters')}
                     </h3>
                     
                     <div className="space-y-3">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('map.category', 'Category')}</label>
                         <select
                           value={poiCategoryFilter}
                           onChange={(e) => setPoiCategoryFilter(e.target.value)}
                           className="w-full p-2 border rounded-md text-sm"
                         >
-                          <option value="all">All categories</option>
+                          <option value="all">{t('map.allCategories', 'All categories')}</option>
                           {getPoiCategories().map(category => (
                             <option key={category} value={category}>
-                              {category.replace('_', ' ')}
+                              {t(`map.poi.categories.${category}`, category.replace('_', ' '))}
                             </option>
                           ))}
                         </select>
                       </div>
                       
                       <div className="pt-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Show on Map</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('map.showOnMap', 'Show on Map')}</label>
                         <button
                           onClick={() => setShowPois(!showPois)}
                           className={`w-full py-2 px-3 rounded-md flex items-center justify-center text-sm ${
@@ -1798,12 +1858,12 @@ const getHueRotation = (targetColor) => {
                           {showPois ? (
                             <>
                               <Eye className="h-4 w-4 mr-2" />
-                              POIs Visible
+                              {t('map.poisVisible', 'POIs Visible')}
                             </>
                           ) : (
                             <>
                               <EyeOff className="h-4 w-4 mr-2" />
-                              POIs Hidden
+                              {t('map.poisHidden', 'POIs Hidden')}
                             </>
                           )}
                         </button>
@@ -1822,21 +1882,31 @@ const getHueRotation = (targetColor) => {
                             className="text-[#22c55e] flex items-center text-sm"
                           >
                             <ArrowLeft className="h-4 w-4 mr-1" />
-                            Back to list
+                            {t('map.backToList', 'Back to list')}
                           </button>
                         </div>
-                        <h3 className="font-bold text-xl text-[#1f2937] mb-2">{selectedPlace.name_en}</h3>
-                        {selectedPlace.name_it && selectedPlace.name_it !== selectedPlace.name_en && (
+                        <h3 className="font-bold text-xl text-[#1f2937] mb-2">{getLocalizedPoiName(selectedPlace)}</h3>
+                        {selectedPlace.name_it && selectedPlace.name_it !== selectedPlace.name_en && language === 'en' && (
                           <p className="text-sm text-[#6b7280] mb-2">{selectedPlace.name_it}</p>
+                        )}
+                        {selectedPlace.name_en && selectedPlace.name_en !== selectedPlace.name_it && language === 'it' && (
+                          <p className="text-sm text-[#6b7280] mb-2">{selectedPlace.name_en}</p>
                         )}
                         
                         <p className="text-sm text-[#6b7280] mb-4">
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#22c55e]/10 text-[#22c55e] capitalize">
-                            {selectedPlace.category ? selectedPlace.category.replace('_', ' ') : selectedPlace.type_en}
+                            {selectedPlace.category ? 
+                              t(`map.poi.categories.${selectedPlace.category}`, selectedPlace.category.replace('_', ' ')) : 
+                              getLocalizedPoiType(selectedPlace)}
                           </span>
-                          {selectedPlace.type_it && selectedPlace.type_it !== selectedPlace.type_en && (
+                          {selectedPlace.type_it && selectedPlace.type_it !== selectedPlace.type_en && language === 'en' && (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 ml-2">
                               {selectedPlace.type_it}
+                            </span>
+                          )}
+                          {selectedPlace.type_en && selectedPlace.type_en !== selectedPlace.type_it && language === 'it' && (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 ml-2">
+                              {selectedPlace.type_en}
                             </span>
                           )}
                         </p>
@@ -1845,7 +1915,7 @@ const getHueRotation = (targetColor) => {
                           <div className="bg-gray-200 h-48 rounded-lg mb-4 overflow-hidden">
                             <img 
                               src={selectedPlace.photo} 
-                              alt={selectedPlace.name_en}
+                              alt={getLocalizedPoiName(selectedPlace)}
                               className="w-full h-full object-cover"
                               onError={(e) => {
                                 e.target.onerror = null;
@@ -1855,12 +1925,12 @@ const getHueRotation = (targetColor) => {
                           </div>
                         ) : (
                           <div className="bg-gray-200 h-48 rounded-lg mb-4 flex items-center justify-center">
-                            <span className="text-gray-500">No image available</span>
+                            <span className="text-gray-500">{t('map.noImageAvailable', 'No image available')}</span>
                           </div>
                         )}
                         
                         <div className="mb-4">
-                          <h4 className="font-medium text-[#1f2937] mb-1">Location</h4>
+                          <h4 className="font-medium text-[#1f2937] mb-1">{t('map.location', 'Location')}</h4>
                           <p className="text-sm text-[#6b7280] flex items-start">
                             <MapPin className="h-4 w-4 mr-1 flex-shrink-0 mt-0.5 text-[#22c55e]" />
                             {typeof selectedPlace.coordinates === 'string' 
@@ -1870,15 +1940,21 @@ const getHueRotation = (targetColor) => {
                           </p>
                         </div>
                         
-                        {selectedPlace.description_en && (
+                        {getLocalizedPoiDescription(selectedPlace) && (
                           <div className="mb-4">
-                            <h4 className="font-medium text-[#1f2937] mb-1">Description</h4>
-                            <p className="text-sm text-[#6b7280]">{selectedPlace.description_en}</p>
+                            <h4 className="font-medium text-[#1f2937] mb-1">{t('map.description', 'Description')}</h4>
+                            <p className="text-sm text-[#6b7280]">{getLocalizedPoiDescription(selectedPlace)}</p>
                             
-                            {selectedPlace.description_it && selectedPlace.description_it !== selectedPlace.description_en && (
+                            {selectedPlace.description_it && selectedPlace.description_it !== selectedPlace.description_en && language === 'en' && (
                               <details className="mt-2">
-                                <summary className="text-xs text-[#22c55e] cursor-pointer">Show Italian description</summary>
+                                <summary className="text-xs text-[#22c55e] cursor-pointer">{t('map.showItalianDescription', 'Show Italian description')}</summary>
                                 <p className="text-sm text-[#6b7280] mt-1 italic">{selectedPlace.description_it}</p>
+                              </details>
+                            )}
+                            {selectedPlace.description_en && selectedPlace.description_en !== selectedPlace.description_it && language === 'it' && (
+                              <details className="mt-2">
+                                <summary className="text-xs text-[#22c55e] cursor-pointer">{t('map.showEnglishDescription', 'Show English description')}</summary>
+                                <p className="text-sm text-[#6b7280] mt-1 italic">{selectedPlace.description_en}</p>
                               </details>
                             )}
                           </div>
@@ -1895,7 +1971,7 @@ const getHueRotation = (targetColor) => {
                               setCurrentWaypointIndex(1);
                               setRouteSelectionStep(1);
                               setMapClickEnabled(true);
-                              setError("Now select your destination");
+                              setError(t('map.selectDestination', "Now select your destination"));
                               
                               // On mobile, close sidebar and show map
                               if (isMobileView) {
@@ -1905,7 +1981,7 @@ const getHueRotation = (targetColor) => {
                             }}
                           >
                             <Route className="h-4 w-4 mr-2" />
-                            Plan a Route From Here
+                            {t('map.planRouteFromHere', 'Plan a Route From Here')}
                           </button>
                         </div>
                       </div>
@@ -1941,7 +2017,7 @@ const getHueRotation = (targetColor) => {
                                   {poi.photo ? (
                                     <img 
                                       src={poi.photo} 
-                                      alt={poi.name_en}
+                                      alt={getLocalizedPoiName(poi)}
                                       className="h-full w-full object-cover"
                                       onError={(e) => {
                                         e.target.onerror = null;
@@ -1956,12 +2032,17 @@ const getHueRotation = (targetColor) => {
                                   )}
                                 </div>
                                 <div className="ml-3 flex-1">
-                                  <h3 className="font-medium text-[#1f2937]">{poi.name_en}</h3>
+                                  <h3 className="font-medium text-[#1f2937]">{getLocalizedPoiName(poi)}</h3>
                                   <p className="text-sm text-[#6b7280] capitalize">
-                                    {poi.category ? poi.category.replace('_', ' ') : poi.type_en}
+                                    {poi.category ? 
+                                      t(`map.poi.categories.${poi.category}`, poi.category.replace('_', ' ')) : 
+                                      getLocalizedPoiType(poi)}
                                   </p>
                                   <p className="text-xs text-[#6b7280] mt-1 truncate max-w-[200px]">
-                                    {poi.description_en ? poi.description_en.substring(0, 60) + (poi.description_en.length > 60 ? '...' : '') : 'No description available'}
+                                    {getLocalizedPoiDescription(poi) ? 
+                                      getLocalizedPoiDescription(poi).substring(0, 60) + 
+                                      (getLocalizedPoiDescription(poi).length > 60 ? '...' : '') : 
+                                      t('map.noDescriptionAvailable', 'No description available')}
                                   </p>
                                   
                                   {/* Quick action buttons */}
@@ -1977,7 +2058,7 @@ const getHueRotation = (targetColor) => {
                                         setCurrentWaypointIndex(1);
                                         setRouteSelectionStep(1);
                                         setMapClickEnabled(true);
-                                        setError("Now select your destination");
+                                        setError(t('map.selectDestination', "Now select your destination"));
                                         
                                         // On mobile, close sidebar and show map
                                         if (isMobileView) {
@@ -1986,7 +2067,7 @@ const getHueRotation = (targetColor) => {
                                         }
                                       }}
                                     >
-                                      Start Route
+                                      {t('map.startRoute', 'Start Route')}
                                     </button>
                                   </div>
                                 </div>
@@ -1996,9 +2077,9 @@ const getHueRotation = (targetColor) => {
                         ) : (
                           <div className="p-8 text-center text-[#6b7280]">
                             {searchQuery ? (
-                              <p>No places found matching "{searchQuery}"</p>
+                              <p>{t('map.noPlacesFound', 'No places found matching')}: "{searchQuery}"</p>
                             ) : (
-                              <p>No points of interest available</p>
+                              <p>{t('map.noPointsOfInterest', 'No points of interest available')}</p>
                             )}
                           </div>
                         )}
@@ -2016,7 +2097,7 @@ const getHueRotation = (targetColor) => {
                     <div className="relative">
                       <input
                         type="text"
-                        placeholder="Search routes..."
+                        placeholder={t('map.search.routesPlaceholder', 'Search routes...')}
                         value={bikeRouteSearchQuery}
                         onChange={(e) => setBikeRouteSearchQuery(e.target.value)}
                         className="w-full pl-10 pr-4 py-2 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#22c55e]"
@@ -2029,42 +2110,41 @@ const getHueRotation = (targetColor) => {
                   <div className="p-4 border-b">
                     <h3 className="font-medium text-[#1f2937] mb-3 flex items-center">
                       <Filter className="h-4 w-4 mr-1" />
-                      Route Filters
+                      {t('map.routeFilters', 'Route Filters')}
                     </h3>
                     
                     <div className="space-y-3">
                       {/* Difficulty filter */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Difficulty</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('map.difficulty', 'Difficulty')}</label>
                         <select
                           value={difficultyFilter}
                           onChange={(e) => setDifficultyFilter(e.target.value)}
                           className="w-full p-2 border rounded-md text-sm"
                         >
-                          <option value="all">All difficulties</option>
-                          <option value="easy">Easy</option>
-                          <option value="medium">Medium</option>
-                          <option value="hard">Hard</option>
+                          <option value="all">{t('map.allDifficulties', 'All difficulties')}</option>
+                          <option value="easy">{t('map.difficulty.easy', 'Easy')}</option>
+                          <option value="medium">{t('map.difficulty.medium', 'Medium')}</option>
+                          <option value="hard">{t('map.difficulty.hard', 'Hard')}</option>
                         </select>
                       </div>
                       
-                      {/* Road type filter */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Road Type</label>
+                      {/* Road type filter */}<div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('map.roadType', 'Road Type')}</label>
                         <select
                           value={roadTypeFilter}
                           onChange={(e) => setRoadTypeFilter(e.target.value)}
                           className="w-full p-2 border rounded-md text-sm"
                         >
-                          <option value="all">All types</option>
+                          <option value="all">{t('map.allTypes', 'All types')}</option>
                           {getRoadTypes().map(type => (
-                            <option key={type} value={type}>{type}</option>
+                            <option key={type} value={type}>{t(`map.roadTypes.${type}`, type)}</option>
                           ))}
                         </select>
                       </div>
                       
                       <div className="pt-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Show on Map</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('map.showOnMap', 'Show on Map')}</label>
                         <button
                           onClick={() => setShowBikeRoutes(!showBikeRoutes)}
                           className={`w-full py-2 px-3 rounded-md flex items-center justify-center text-sm ${
@@ -2074,12 +2154,12 @@ const getHueRotation = (targetColor) => {
                           {showBikeRoutes ? (
                             <>
                               <Eye className="h-4 w-4 mr-2" />
-                              Routes Visible
+                              {t('map.routesVisible', 'Routes Visible')}
                             </>
                           ) : (
                             <>
                               <EyeOff className="h-4 w-4 mr-2" />
-                              Routes Hidden
+                              {t('map.routesHidden', 'Routes Hidden')}
                             </>
                           )}
                         </button>
@@ -2092,14 +2172,14 @@ const getHueRotation = (targetColor) => {
                           className="flex-1 bg-blue-100 text-blue-700 py-2 rounded-md text-sm hover:bg-blue-200 flex items-center justify-center"
                         >
                           <Eye className="h-4 w-4 mr-1" />
-                          Show All
+                          {t('map.showAll', 'Show All')}
                         </button>
                         <button
                           onClick={() => toggleAllRoutes(false)}
                           className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-md text-sm hover:bg-gray-200 flex items-center justify-center"
                         >
                           <EyeOff className="h-4 w-4 mr-1" />
-                          Hide All
+                          {t('map.hideAll', 'Hide All')}
                         </button>
                       </div>
                     </div>
@@ -2116,7 +2196,7 @@ const getHueRotation = (targetColor) => {
                             className="text-[#3b82f6] flex items-center text-sm"
                           >
                             <ArrowLeft className="h-4 w-4 mr-1" />
-                            Back to routes
+                            {t('map.backToRoutes', 'Back to routes')}
                           </button>
                         </div>
                         
@@ -2128,10 +2208,13 @@ const getHueRotation = (targetColor) => {
                             selectedBikeRoute.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-800' :
                             'bg-red-100 text-red-800'
                           }`}>
-                            {selectedBikeRoute.difficulty.charAt(0).toUpperCase() + selectedBikeRoute.difficulty.slice(1)}
+                            {t(`map.difficulty.${selectedBikeRoute.difficulty}`, 
+                               selectedBikeRoute.difficulty.charAt(0).toUpperCase() + selectedBikeRoute.difficulty.slice(1))}
                           </span>
                           <span className="mx-2">•</span>
-                          <span className="text-sm text-gray-600 capitalize">{selectedBikeRoute.roadType || 'Mixed'}</span>
+                          <span className="text-sm text-gray-600 capitalize">
+                            {t(`map.roadTypes.${selectedBikeRoute.roadType}`, selectedBikeRoute.roadType || 'Mixed')}
+                          </span>
                         </div>
                         
                         {selectedBikeRoute.description && (
@@ -2141,25 +2224,25 @@ const getHueRotation = (targetColor) => {
                         {/* Stats grid */}
                         <div className="grid grid-cols-2 gap-3 mb-4">
                           <div className="bg-gray-50 p-3 rounded-md">
-                            <div className="text-gray-500 text-xs mb-1">Distance</div>
+                            <div className="text-gray-500 text-xs mb-1">{t('map.distance', 'Distance')}</div>
                             <div className="font-semibold text-gray-900">
                               {formatDistance(selectedBikeRoute.stats?.totalDistance * 1000 || 0)}
                             </div>
                           </div>
                           <div className="bg-gray-50 p-3 rounded-md">
-                            <div className="text-gray-500 text-xs mb-1">Elevation Gain</div>
+                            <div className="text-gray-500 text-xs mb-1">{t('map.elevationGain', 'Elevation Gain')}</div>
                             <div className="font-semibold text-gray-900">
                               {formatElevation(selectedBikeRoute.stats?.elevationGain || 0)}
                             </div>
                           </div>
                           <div className="bg-gray-50 p-3 rounded-md">
-                            <div className="text-gray-500 text-xs mb-1">Max Elevation</div>
+                            <div className="text-gray-500 text-xs mb-1">{t('map.maxElevation', 'Max Elevation')}</div>
                             <div className="font-semibold text-gray-900">
                               {formatElevation(selectedBikeRoute.stats?.maxElevation || 0)}
                             </div>
                           </div>
                           <div className="bg-gray-50 p-3 rounded-md">
-                            <div className="text-gray-500 text-xs mb-1">Min Elevation</div>
+                            <div className="text-gray-500 text-xs mb-1">{t('map.minElevation', 'Min Elevation')}</div>
                             <div className="font-semibold text-gray-900">
                               {formatElevation(selectedBikeRoute.stats?.minElevation || 0)}
                             </div>
@@ -2174,7 +2257,7 @@ const getHueRotation = (targetColor) => {
                             className="flex-1 py-2 px-3 rounded-md flex items-center justify-center bg-blue-100 text-blue-700 hover:bg-blue-200"
                           >
                             <Download className="h-4 w-4 mr-2" />
-                            Download GPX
+                            {t('map.downloadGPX', 'Download GPX')}
                           </a>
                           <button 
                             className="flex-1 py-2 px-3 rounded-md flex items-center justify-center bg-green-100 text-green-700 hover:bg-green-200"
@@ -2187,8 +2270,8 @@ const getHueRotation = (targetColor) => {
                                 // Create POI-like objects
                                 const startPoi = {
                                   _id: `start-${selectedBikeRoute._id}`,
-                                  name_en: `Start of ${selectedBikeRoute.name}`,
-                                  type_en: 'Starting Point',
+                                  name_en: t('map.startOf', 'Start of') + ` ${selectedBikeRoute.name}`,
+                                  type_en: t('map.startingPoint', 'Starting Point'),
                                   coordinates: {
                                     lng: startPoint[0],
                                     lat: startPoint[1]
@@ -2198,8 +2281,8 @@ const getHueRotation = (targetColor) => {
                                 
                                 const endPoi = {
                                   _id: `end-${selectedBikeRoute._id}`,
-                                  name_en: `End of ${selectedBikeRoute.name}`,
-                                  type_en: 'End Point',
+                                  name_en: t('map.endOf', 'End of') + ` ${selectedBikeRoute.name}`,
+                                  type_en: t('map.endPoint', 'End Point'),
                                   coordinates: {
                                     lng: endPoint[0],
                                     lat: endPoint[1]
@@ -2225,7 +2308,7 @@ const getHueRotation = (targetColor) => {
                             }}
                           >
                             <Route className="h-4 w-4 mr-2" />
-                            Navigate This Route
+                            {t('map.navigateThisRoute', 'Navigate This Route')}
                           </button>
                         </div>
                       </div>
@@ -2274,15 +2357,16 @@ const getHueRotation = (targetColor) => {
                                       route.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-800' :
                                       'bg-red-100 text-red-800'
                                     }`}>
-                                      {route.difficulty.charAt(0).toUpperCase() + route.difficulty.slice(1)}
+                                      {t(`map.difficulty.${route.difficulty}`, 
+                                         route.difficulty.charAt(0).toUpperCase() + route.difficulty.slice(1))}
                                     </span>
                                     <span className="mx-2">•</span>
-                                    <span>{route.roadType || 'Mixed'}</span>
+                                    <span>{t(`map.roadTypes.${route.roadType}`, route.roadType || 'Mixed')}</span>
                                     <span className="mx-2">•</span>
                                     <span>
                                       {route.stats?.totalDistance ? 
                                         formatDistance(route.stats.totalDistance * 1000) : 
-                                        'Distance N/A'}
+                                        t('map.distanceNA', 'Distance N/A')}
                                     </span>
                                   </div>
                                   {route.description && (
@@ -2295,7 +2379,7 @@ const getHueRotation = (targetColor) => {
                                   <button
                                     onClick={() => toggleRouteVisibility(route._id)}
                                     className={`p-1 rounded-full ${visibleRoutes.has(route._id) ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}`}
-                                    title={visibleRoutes.has(route._id) ? "Hide route" : "Show route"}
+                                    title={visibleRoutes.has(route._id) ? t('map.hideRoute', "Hide route") : t('map.showRoute', "Show route")}
                                   >
                                     {visibleRoutes.has(route._id) ? 
                                       <EyeOff className="h-4 w-4" /> : 
@@ -2304,7 +2388,7 @@ const getHueRotation = (targetColor) => {
                                   <button
                                     onClick={() => fetchAndDisplayGpx(route._id)}
                                     className="p-1 rounded-full bg-gray-100 hover:bg-gray-200"
-                                    title="Load this route"
+                                    title={t('map.loadThisRoute', 'Load this route')}
                                   >
                                     <Bike className="h-4 w-4 text-gray-700" />
                                   </button>
@@ -2315,9 +2399,9 @@ const getHueRotation = (targetColor) => {
                         ) : (
                           <div className="p-8 text-center text-[#6b7280]">
                             {bikeRouteSearchQuery || difficultyFilter !== 'all' || roadTypeFilter !== 'all' ? (
-                              <p>No routes match your filters</p>
+                              <p>{t('map.noRoutesMatchFilters', 'No routes match your filters')}</p>
                             ) : (
-                              <p>No bike routes available</p>
+                              <p>{t('map.noBikeRoutesAvailable', 'No bike routes available')}</p>
                             )}
                           </div>
                         )}
@@ -2332,7 +2416,7 @@ const getHueRotation = (targetColor) => {
                 <div>
                   {/* Route Options */}
                   <div className="p-4 border-b">
-                    <h3 className="font-medium text-[#1f2937] mb-3">Route Options</h3>
+                    <h3 className="font-medium text-[#1f2937] mb-3">{t('map.routeOptions', 'Route Options')}</h3>
                     
                     <div className="flex space-x-2 mb-3">
                       <button
@@ -2342,7 +2426,7 @@ const getHueRotation = (targetColor) => {
                         }`}
                       >
                         <PersonStanding className="h-4 w-4" />
-                        <span>Walking</span>
+                        <span>{t('map.walking', 'Walking')}</span>
                       </button>
                       
                       <button
@@ -2352,7 +2436,7 @@ const getHueRotation = (targetColor) => {
                         }`}
                       >
                         <Bike className="h-4 w-4" />
-                        <span>Cycling</span>
+                        <span>{t('map.cycling', 'Cycling')}</span>
                       </button>
                     </div>
                     
@@ -2364,7 +2448,7 @@ const getHueRotation = (targetColor) => {
                         }`}
                       >
                         <Route className="h-4 w-4" />
-                        <span>Shortest</span>
+                        <span>{t('map.shortest', 'Shortest')}</span>
                       </button>
                       
                       <button
@@ -2374,7 +2458,7 @@ const getHueRotation = (targetColor) => {
                         }`}
                       >
                         <Zap className="h-4 w-4" />
-                        <span>Fastest</span>
+                        <span>{t('map.fastest', 'Fastest')}</span>
                       </button>
                     </div>
                     
@@ -2386,7 +2470,7 @@ const getHueRotation = (targetColor) => {
                           if (mapClickEnabled) {
                             setError(null);
                           } else {
-                            setError("Click on the map to set waypoints");
+                            setError(t('map.clickMapForWaypoints', "Click on the map to set waypoints"));
                           }
                           
                           // On mobile, close sidebar and show map when enabling map click
@@ -2400,7 +2484,7 @@ const getHueRotation = (targetColor) => {
                         } hover:bg-amber-200`}
                       >
                         <MapPin className="h-4 w-4" />
-                        <span>{mapClickEnabled ? "Disable Map Click" : "Enable Map Click"}</span>
+                        <span>{mapClickEnabled ? t('map.disableMapClick', "Disable Map Click") : t('map.enableMapClick', "Enable Map Click")}</span>
                       </button>
                       
                       <button
@@ -2408,7 +2492,7 @@ const getHueRotation = (targetColor) => {
                         className="flex-1 py-2 px-3 rounded-md flex items-center justify-center space-x-1 bg-red-100 text-red-700 hover:bg-red-200"
                       >
                         <Trash2 className="h-4 w-4" />
-                        <span>Clear</span>
+                        <span>{t('map.clear', 'Clear')}</span>
                       </button>
                       
                       {routeInfo && (
@@ -2417,7 +2501,7 @@ const getHueRotation = (targetColor) => {
                           className="flex-1 py-2 px-3 rounded-md flex items-center justify-center space-x-1 bg-blue-100 text-blue-700 hover:bg-blue-200"
                         >
                           <Download className="h-4 w-4" />
-                          <span>Export</span>
+                          <span>{t('map.export', 'Export')}</span>
                         </button>
                       )}
                     </div>
@@ -2425,7 +2509,7 @@ const getHueRotation = (targetColor) => {
                   
                   {/* Waypoints List */}
                   <div className="p-4 border-b">
-                    <h3 className="font-medium text-[#1f2937] mb-3">Your Route</h3>
+                    <h3 className="font-medium text-[#1f2937] mb-3">{t('map.yourRoute', 'Your Route')}</h3>
                     
                     <div className="space-y-2">
                       {waypoints.map((waypoint, index) => (
@@ -2444,12 +2528,12 @@ const getHueRotation = (targetColor) => {
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="font-medium text-sm truncate">
-                                {waypoint.custom ? "Custom Location" : waypoint.name_en}
+                                {waypoint.custom ? t('map.customLocation', "Custom Location") : getLocalizedPoiName(waypoint)}
                               </p>
                               <p className="text-xs text-gray-500">
-                                {index === 0 ? "Starting Point" : 
-                                index === waypoints.length - 1 ? "Destination" : 
-                                `Waypoint ${index}`}
+                                {index === 0 ? t('map.startingPoint', "Starting Point") : 
+                                index === waypoints.length - 1 ? t('map.destination', "Destination") : 
+                                t('map.waypoint', 'Waypoint') + ` ${index}`}
                               </p>
                               {waypoint.custom && (
                                 <p className="text-xs text-gray-400">
@@ -2461,7 +2545,7 @@ const getHueRotation = (targetColor) => {
                               <button 
                                 onClick={() => removeWaypoint(index)}
                                 className="p-1 rounded-full hover:bg-gray-200"
-                                title="Remove waypoint"
+                                title={t('map.removeWaypoint', 'Remove waypoint')}
                               >
                                 <X className="h-4 w-4 text-gray-500" />
                               </button>
@@ -2473,7 +2557,7 @@ const getHueRotation = (targetColor) => {
                       {/* Show message when no waypoints selected */}
                       {(!waypoints.length || waypoints.every(wp => !wp)) && (
                         <p className="text-sm text-gray-500 text-center py-2">
-                          Select points on the map to create a route
+                          {t('map.selectPointsOnMap', 'Select points on the map to create a route')}
                         </p>
                       )}
                       
@@ -2484,7 +2568,7 @@ const getHueRotation = (targetColor) => {
                           className="w-full mt-2 py-2 px-3 rounded-md flex items-center justify-center text-sm bg-gray-100 text-gray-700 hover:bg-gray-200"
                         >
                           <Plus className="h-4 w-4 mr-1" />
-                          Add Waypoint
+                          {t('map.addWaypoint', 'Add Waypoint')}
                         </button>
                       )}
                     </div>
@@ -2493,16 +2577,16 @@ const getHueRotation = (targetColor) => {
                   {/* Route Summary */}
                   {routeInfo && (
                     <div className="p-4 border-b">
-                      <h3 className="font-medium text-[#1f2937] mb-3">Route Summary</h3>
+                      <h3 className="font-medium text-[#1f2937] mb-3">{t('map.routeSummary', 'Route Summary')}</h3>
                       
                       <div className="grid grid-cols-2 gap-3 mb-3">
                         <div className="bg-gray-50 p-3 rounded-md">
-                          <div className="text-gray-500 text-xs mb-1">Distance</div>
+                          <div className="text-gray-500 text-xs mb-1">{t('map.distance', 'Distance')}</div>
                           <div className="font-semibold text-gray-900">{formatDistance(routeInfo.distance)}</div>
                         </div>
                         
                         <div className="bg-gray-50 p-3 rounded-md">
-                          <div className="text-gray-500 text-xs mb-1">Estimated Time</div>
+                          <div className="text-gray-500 text-xs mb-1">{t('map.estimatedTime', 'Estimated Time')}</div>
                           <div className="font-semibold text-gray-900">{formatDuration(routeInfo.duration)}</div>
                         </div>
                       </div>
@@ -2510,7 +2594,7 @@ const getHueRotation = (targetColor) => {
                       {/* Route Alternatives */}
                       {routeAlternatives.length > 1 && (
                         <div className="mt-4">
-                          <h4 className="text-sm font-medium text-gray-700 mb-2">Route Alternatives</h4>
+                          <h4 className="text-sm font-medium text-gray-700 mb-2">{t('map.routeAlternatives', 'Route Alternatives')}</h4>
                           <div className="space-y-2">
                             {routeAlternatives.map((route, index) => (
                               <button
@@ -2523,7 +2607,7 @@ const getHueRotation = (targetColor) => {
                                 onClick={() => switchRouteAlternative(index)}
                               >
                                 <div>
-                                  <span className="text-sm font-medium">Route {index + 1}</span>
+                                  <span className="text-sm font-medium">{t('map.route', 'Route')} {index + 1}</span>
                                   <p className="text-xs text-gray-500">{formatDistance(route.distance)}</p>
                                 </div>
                                 <div className="text-right">
@@ -2539,10 +2623,10 @@ const getHueRotation = (targetColor) => {
                     </div>
                   )}
                   
-                  {/* Turn-by-turn Directions */}
-                  {routeInfo && routeInfo.steps && routeInfo.steps.length > 0 && (
-                    <TurnByTurnNavigation steps={routeInfo.steps} map={map} />
-                  )}
+                 {/* Turn-by-turn Directions */}
+{routeInfo && routeInfo.steps && routeInfo.steps.length > 0 && (
+  <TurnByTurnNavigation steps={routeInfo.steps} map={map} language={language} />
+)}
                 </div>
               )}
             </div>
@@ -2564,17 +2648,17 @@ const getHueRotation = (targetColor) => {
         )}
         
         {/* Map Legend */}
-        <MapLegend></MapLegend>
-
-        
+        <MapLegend />
         
         {/* Click anywhere button when in map click mode */}
         {mapClickEnabled && (
           <div className="fixed bottom-20 md:bottom-4 left-1/2 transform -translate-x-1/2 bg-white px-4 py-2 rounded-lg shadow-lg z-20 flex items-center">
             <span className="text-sm font-medium text-gray-600 mr-2">
-              {currentWaypointIndex === 0 ? "Click anywhere on map to set starting point" : 
-               currentWaypointIndex === waypoints.length - 1 ? "Click anywhere on map to set destination" :
-               `Click anywhere on map to set waypoint ${currentWaypointIndex}`}
+              {currentWaypointIndex === 0 ? 
+                t('map.clickMapForStartingPoint', "Click anywhere on map to set starting point") : 
+                currentWaypointIndex === waypoints.length - 1 ? 
+                  t('map.clickMapForDestination', "Click anywhere on map to set destination") :
+                  t('map.clickMapForWaypoint', "Click anywhere on map to set waypoint") + ` ${currentWaypointIndex}`}
             </span>
             <button
               onClick={() => setMapClickEnabled(false)}
@@ -2593,7 +2677,9 @@ const getHueRotation = (targetColor) => {
             <div className="relative">
               <input
                 type="text"
-                placeholder={activeSidebarTab === 'pois' ? "Search places..." : "Search routes..."}
+                placeholder={activeSidebarTab === 'pois' ? 
+                  t('map.search.poisPlaceholder', "Search places...") : 
+                  t('map.search.routesPlaceholder', "Search routes...")}
                 value={activeSidebarTab === 'pois' ? searchQuery : bikeRouteSearchQuery}
                 onChange={(e) => {
                   if (activeSidebarTab === 'pois') {
@@ -2614,8 +2700,7 @@ const getHueRotation = (targetColor) => {
                 onClick={() => setActiveSidebarTab('pois')}
               >
                 <div className="flex items-center justify-center">
-                  <MapPin className="h-4 w-4 mr-1" />
-                  POIs
+                  <MapPin className="h-4 w-4 mr-1" />{t('map.tabs.pois', 'POIs')}
                 </div>
               </button>
               <button 
@@ -2624,7 +2709,7 @@ const getHueRotation = (targetColor) => {
               >
                 <div className="flex items-center justify-center">
                   <Bike className="h-4 w-4 mr-1" />
-                  Bike Routes
+                  {t('map.tabs.bikeRoutes', 'Bike Routes')}
                 </div>
               </button>
               <button 
@@ -2638,7 +2723,7 @@ const getHueRotation = (targetColor) => {
               >
                 <div className="flex items-center justify-center">
                   <Route className="h-4 w-4 mr-1" />
-                  Planner
+                  {t('map.tabs.planner', 'Planner')}
                 </div>
               </button>
             </div>
@@ -2672,7 +2757,7 @@ const getHueRotation = (targetColor) => {
                       {poi.photo ? (
                         <img 
                           src={poi.photo} 
-                          alt={poi.name_en}
+                          alt={getLocalizedPoiName(poi)}
                           className="h-full w-full object-cover"
                           onError={(e) => {
                             e.target.onerror = null;
@@ -2687,12 +2772,17 @@ const getHueRotation = (targetColor) => {
                       )}
                     </div>
                     <div className="ml-3 flex-1">
-                      <h3 className="font-medium text-[#1f2937]">{poi.name_en}</h3>
+                      <h3 className="font-medium text-[#1f2937]">{getLocalizedPoiName(poi)}</h3>
                       <p className="text-sm text-[#6b7280] capitalize">
-                        {poi.category ? poi.category.replace('_', ' ') : poi.type_en}
+                        {poi.category ? 
+                          t(`map.poi.categories.${poi.category}`, poi.category.replace('_', ' ')) : 
+                          getLocalizedPoiType(poi)}
                       </p>
                       <p className="text-xs text-[#6b7280] mt-1 truncate max-w-[200px]">
-                        {poi.description_en ? poi.description_en.substring(0, 60) + (poi.description_en.length > 60 ? '...' : '') : 'No description available'}
+                        {getLocalizedPoiDescription(poi) ? 
+                          getLocalizedPoiDescription(poi).substring(0, 60) + 
+                          (getLocalizedPoiDescription(poi).length > 60 ? '...' : '') : 
+                          t('map.noDescriptionAvailable', 'No description available')}
                       </p>
                     </div>
                   </div>
@@ -2702,9 +2792,9 @@ const getHueRotation = (targetColor) => {
               {filterPois().length === 0 && (
                 <div className="p-8 text-center text-[#6b7280]">
                   {searchQuery ? (
-                    <p>No places found matching "{searchQuery}"</p>
+                    <p>{t('map.noPlacesFound', 'No places found matching')}: "{searchQuery}"</p>
                   ) : (
-                    <p>No points of interest available</p>
+                    <p>{t('map.noPointsOfInterest', 'No points of interest available')}</p>
                   )}
                 </div>
               )}
@@ -2751,7 +2841,8 @@ const getHueRotation = (targetColor) => {
                           route.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-800' :
                           'bg-red-100 text-red-800'
                         }`}>
-                          {route.difficulty.charAt(0).toUpperCase() + route.difficulty.slice(1)}
+                          {t(`map.difficulty.${route.difficulty}`, 
+                            route.difficulty.charAt(0).toUpperCase() + route.difficulty.slice(1))}
                         </span>
                         <span className="mx-2">•</span>
                         <span>{formatDistance(route.stats?.totalDistance * 1000 || 0)}</span>
@@ -2764,9 +2855,9 @@ const getHueRotation = (targetColor) => {
               {filterBikeRoutes().length === 0 && (
                 <div className="p-8 text-center text-[#6b7280]">
                   {bikeRouteSearchQuery ? (
-                    <p>No routes found matching "{bikeRouteSearchQuery}"</p>
+                    <p>{t('map.noRoutesFound', 'No routes found matching')}: "{bikeRouteSearchQuery}"</p>
                   ) : (
-                    <p>No bike routes available</p>
+                    <p>{t('map.noBikeRoutesAvailable', 'No bike routes available')}</p>
                   )}
                 </div>
               )}
@@ -2783,7 +2874,7 @@ const getHueRotation = (targetColor) => {
                   }`}
                 >
                   <PersonStanding className="h-4 w-4" />
-                  <span>Walking</span>
+                  <span>{t('map.walking', 'Walking')}</span>
                 </button>
                 
                 <button
@@ -2793,7 +2884,7 @@ const getHueRotation = (targetColor) => {
                   }`}
                 >
                   <Bike className="h-4 w-4" />
-                  <span>Cycling</span>
+                  <span>{t('map.cycling', 'Cycling')}</span>
                 </button>
               </div>
               
@@ -2806,21 +2897,21 @@ const getHueRotation = (targetColor) => {
                 className="w-full bg-green-500 text-white py-3 mt-4 rounded-full font-semibold hover:bg-green-600 transition-colors flex items-center justify-center"
               >
                 <MapPin className="h-4 w-4 mr-2" />
-                Start Planning on Map
+                {t('map.startPlanningOnMap', 'Start Planning on Map')}
               </button>
               
               {routeInfo && (
                 <div className="mt-6">
-                  <h3 className="font-medium text-[#1f2937] mb-3">Current Route</h3>
+                  <h3 className="font-medium text-[#1f2937] mb-3">{t('map.currentRoute', 'Current Route')}</h3>
                   
                   <div className="grid grid-cols-2 gap-3 mb-3">
                     <div className="bg-gray-50 p-3 rounded-md">
-                      <div className="text-gray-500 text-xs mb-1">Distance</div>
+                      <div className="text-gray-500 text-xs mb-1">{t('map.distance', 'Distance')}</div>
                       <div className="font-semibold text-gray-900">{formatDistance(routeInfo.distance)}</div>
                     </div>
                     
                     <div className="bg-gray-50 p-3 rounded-md">
-                      <div className="text-gray-500 text-xs mb-1">Estimated Time</div>
+                      <div className="text-gray-500 text-xs mb-1">{t('map.estimatedTime', 'Estimated Time')}</div>
                       <div className="font-semibold text-gray-900">{formatDuration(routeInfo.duration)}</div>
                     </div>
                   </div>
@@ -2831,7 +2922,7 @@ const getHueRotation = (targetColor) => {
                     }}
                     className="w-full bg-blue-500 text-white py-2 rounded-full font-medium transition-colors mt-2"
                   >
-                    View Route on Map
+                    {t('map.viewRouteOnMap', 'View Route on Map')}
                   </button>
                 </div>
               )}
@@ -2848,11 +2939,11 @@ const getHueRotation = (targetColor) => {
               false ? 'text-green-600' : 'text-gray-500'
             }`}
             onClick={() => {
-              window.location.href = '/';
+              window.location.href = '/business-dashboard';
             }}
           >
             <Home className="h-5 w-5" />
-            <span className="text-xs mt-1">Home</span>
+            <span className="text-xs mt-1">{t('map.shop', 'Shop')}</span>
           </button>
           <button
             className={`flex flex-col items-center justify-center w-1/4 p-1 ${
@@ -2865,7 +2956,7 @@ const getHueRotation = (targetColor) => {
             }}
           >
             <MapPin className="h-5 w-5" />
-            <span className="text-xs mt-1">Experiences</span>
+            <span className="text-xs mt-1">{t('map.experiences', 'Experiences')}</span>
           </button>
           <button
             className={`flex flex-col items-center justify-center w-1/4 p-1 ${
@@ -2878,7 +2969,7 @@ const getHueRotation = (targetColor) => {
             }}
           >
             <Bike className="h-5 w-5" />
-            <span className="text-xs mt-1">Routes</span>
+            <span className="text-xs mt-1">{t('map.routes', 'Routes')}</span>
           </button>
           <button
             className={`flex flex-col items-center justify-center w-1/4 p-1 ${
@@ -2891,7 +2982,7 @@ const getHueRotation = (targetColor) => {
             }}
           >
             <Layers className="h-5 w-5" />
-            <span className="text-xs mt-1">Map/List</span>
+            <span className="text-xs mt-1">{t('map.mapList', 'Map/List')}</span>
           </button>
         </div>
       )}
