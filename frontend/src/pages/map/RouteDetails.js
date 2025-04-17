@@ -2,6 +2,9 @@ import React from 'react';
 import { Download, X, Layers, ArrowRight, Info, MapPin } from 'lucide-react';
 import ElevationProfile from './ElevationProfile';
 
+import config from '../../config';
+
+
 const RouteDetails = ({ route, onClose }) => {
   if (!route) return null;
   
@@ -138,7 +141,7 @@ const RouteDetails = ({ route, onClose }) => {
         {/* Action buttons */}
         <div className="flex space-x-2 mt-4">
           <a 
-            href={`http://localhost:5000/api/bike-routes/${route._id}/gpx`}
+            href={config.getApiUrl(`bike-routes/${route._id}/gpx`)}
             download={`${route.name}.gpx`}
             className="flex-1 py-2 px-3 rounded-md flex items-center justify-center bg-green-100 text-green-700 hover:bg-green-200"
           >

@@ -32,6 +32,8 @@ import TurnByTurnNavigation from './TurnByTurnNavigation';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
 
+import config from '../../config';
+
 // Set your access token
 mapboxgl.accessToken = 'pk.eyJ1IjoibTJvdGVjaCIsImEiOiJjbTczbzU4aWQwMWdmMmpzY3N4ejJ3czlnIn0.fLDR4uG8kD8-g_IDM8ZPdQ';
 
@@ -262,7 +264,7 @@ const IntegratedMap = ({ initialRouteId, initialPoiId, initialMode, currentLangu
       try {
         setIsLoading(true);
         setError(null);
-        const response = await fetch('http://localhost:5000/api/pois');
+        const response = await fetch(config.getApiUrl('pois'));
         
         if (!response.ok) {
           throw new Error(`Server responded with status: ${response.status}`);
@@ -293,7 +295,7 @@ const IntegratedMap = ({ initialRouteId, initialPoiId, initialMode, currentLangu
       try {
         setIsLoading(true);
         setError(null);
-        const response = await fetch('http://localhost:5000/api/bike-routes');
+        const response = await fetch(config.getApiUrl('bike-routes'));
         
         if (!response.ok) {
           throw new Error(`Server responded with status: ${response.status}`);
@@ -690,7 +692,7 @@ const marker = new mapboxgl.Marker({
       setError(null);
       
       // Fetch route details first
-      const routeResponse = await fetch(`http://localhost:5000/api/bike-routes/${routeId}`);
+      const routeResponse = await fetch(config.getApiUrl(`bike-routes/${routeId}`));
       
       if (!routeResponse.ok) {
         throw new Error(`Failed to fetch route details: ${routeResponse.status}`);
@@ -709,7 +711,7 @@ const marker = new mapboxgl.Marker({
         displayRouteFromPath(route);
       } else {
         // Fetch the route path data
-        const pathResponse = await fetch(`http://localhost:5000/api/bike-routes/${routeId}/path`);
+        const pathResponse = await fetch(config.getApiUrl(`bike-routes/${routeId}/path`));
         
         if (!pathResponse.ok) {
           throw new Error(`Failed to fetch route path: ${pathResponse.status}`);
@@ -2253,7 +2255,7 @@ const response = await fetch(
                         {/* Action buttons */}
                         <div className="flex space-x-2 mt-4">
                           <a 
-                            href={`http://localhost:5000/api/bike-routes/${selectedBikeRoute._id}/gpx`}
+                            href={config.getApiUrl(`bike-routes/${selectedBikeRoute._id}/gpx`)}
                             download={`${selectedBikeRoute.name}.gpx`}
                             className="flex-1 py-2 px-3 rounded-md flex items-center justify-center bg-blue-100 text-blue-700 hover:bg-blue-200"
                           >
