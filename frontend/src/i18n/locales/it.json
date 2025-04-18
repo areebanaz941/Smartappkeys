@@ -72,6 +72,11 @@
     "legend": "Legenda",
     "pointsOfInterest": "Luoghi",
     "bikeRoutes": "Percorsi",
+    "offers": "Offerte",
+    "availableOffers": "Offerte disponibili",
+    "backToOffers": "Torna a offerte",
+    "noOffersAvailable": "Nessuna offerta speciale disponibile al momento",
+    "showThisCode": "Mostra questo QR code per usufruire dell'offerta",
     "navigation": {
       "title": "Indicazioni Passo-Passo"
     },

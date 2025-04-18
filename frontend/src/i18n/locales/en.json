@@ -73,6 +73,11 @@
     "legend": "Legend",
     "pointsOfInterest": "Places",
     "bikeRoutes": "Routes",
+    "offers": "Offers",
+    "availableOffers": "Available Offers",
+    "backToOffers": "Back to offers",
+    "noOffersAvailable": "No special offers available right now",
+    "showThisCode": "Show this QR code to redeem the offer",
     "navigation": {
       "title": "Turn-by-Turn Directions"
     },

@@ -10,6 +10,10 @@ const fs = require('fs');
 const mainRoutes = require('./routes/routes');
 const poiRoutes = require('./routes/poi.routes'); 
 const bikeRouteRoutes = require('./routes/bike-routes.routes'); // Import the bike route routes
+const redemptionRoutes = require('./routes/redemptions'); // Redeemed offers
+
+// Import offers
+const offerRoutes = require('./routes/offers');
 
 // Initialize express app
 const app = express();
@@ -21,6 +25,9 @@ console.logDetailed = (prefix, obj) => {
   console.log(typeof obj === 'object' ? JSON.stringify(obj, null, 2) : obj);
   console.log(`==== End ${prefix} ====\n`);
 };
+
+// Log the current server time
+console.log('Now:', new Date());
 
 // Ensure uploads directory exists
 const uploadDir = path.join(__dirname, 'uploads');
@@ -79,6 +86,9 @@ app.use('/api/pois', poiRoutes); // POI-specific routes from poi.routes.js
 console.log('POI routes registered at /api/pois');
 app.use('/api/bike-routes', bikeRouteRoutes); // Bike route-specific routes
 console.log('Bike route routes registered at /api/bike-routes');
+app.use('/api/offers', offerRoutes); // Offers from business to users
+console.log('Offer routes registered at /api/offers');
+app.use('/api/redemptions', redemptionRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

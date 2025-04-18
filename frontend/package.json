@@ -15,11 +15,13 @@
     "gpxparser": "^3.0.8",
     "i18next": "22.4.15",
     "i18next-browser-languagedetector": "^7.1.0",
+    "jwt-decode": "^4.0.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.471.1",
     "mapbox-gl": "^3.10.0",
     "maplibre-gl": "^5.0.1",
     "papaparse": "^5.5.2",
+    "qrcode.react": "^4.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-i18next": "^12.3.1",
@@ -31,7 +33,6 @@
     "typescript": "4.9.5",
     "web-vitals": "^4.2.4"
   },
-  
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",

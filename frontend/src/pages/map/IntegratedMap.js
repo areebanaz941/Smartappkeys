@@ -18,6 +18,7 @@ import {
   EyeOff,
   Eye,
   Filter,
+  Ticket,
   Compass,
   ChevronDown,
   ChevronUp,
@@ -31,8 +32,17 @@ import * as turf from '@turf/turf';
 import TurnByTurnNavigation from './TurnByTurnNavigation';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
+import { QRCodeCanvas } from 'qrcode.react';
 
 import config from '../../config';
+
+// Get user id (or null)
+import { getUserId } from '../../lib/auth';
+
+// Get components
+import OffersList from '../../components/OffersList';
+
+const userId = getUserId();
 
 // Set your access token
 mapboxgl.accessToken = 'pk.eyJ1IjoibTJvdGVjaCIsImEiOiJjbTczbzU4aWQwMWdmMmpzY3N4ejJ3czlnIn0.fLDR4uG8kD8-g_IDM8ZPdQ';
@@ -100,7 +110,11 @@ const IntegratedMap = ({ initialRouteId, initialPoiId, initialMode, currentLangu
   const [roadTypeFilter, setRoadTypeFilter] = useState('all');
   const [selectedBikeRoute, setSelectedBikeRoute] = useState(null);
   const [visibleRoutes, setVisibleRoutes] = useState(new Set());
-  
+
+  // Offers
+  const [offers, setOffers] = useState([]);
+  const [selectedOffer, setSelectedOffer] = useState(null);
+
   // Route planning
   const [isRoutingPanelOpen, setIsRoutingPanelOpen] = useState(false);
   const [routeMode, setRouteMode] = useState('walking'); // 'walking' or 'cycling'
@@ -351,6 +365,37 @@ const IntegratedMap = ({ initialRouteId, initialPoiId, initialMode, currentLangu
       setActiveSidebarTab(initialMode);
     }
   }, [map, bikeRoutes, pois, initialRouteId, initialPoiId, initialMode]);
+
+    // Fetch Offers from API
+    useEffect(() => {
+      const fetchOffers = async () => {
+        try {
+          setIsLoading(true);
+          setError(null);
+          const response = await fetch(config.getApiUrl('offers'));
+          
+          if (!response.ok) {
+            throw new Error(`Server responded with status: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          
+          if (!data.success) {
+            throw new Error(data.message || 'Failed to fetch offers');
+          }
+          
+          setPois(data.data || []);
+          console.log('Offers loaded:', data.data?.length || 0);
+        } catch (err) {
+          console.error('Error fetching offers:', err);
+          setError(`Failed to load offers: ${err.message}`);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+  
+      fetchOffers();
+    }, []);  
   
   // Add POI markers to map when map is ready and POIs are loaded
   useEffect(() => {
@@ -1805,6 +1850,15 @@ const response = await fetch(
                   {t('map.planner.name', 'Planner')}
                 </div>
               </button>
+              <button 
+                className={`flex-1 py-3 font-medium text-sm ${activeSidebarTab === 'offers' ? 'text-green-600 border-b-2 border-green-600' :'text-gray-500 hover:text-gray-700'}`}
+                onClick={() => setActiveSidebarTab('offers')}
+              >
+                <div className="flex items-center justify-center">
+                  <MapPin className="h-4 w-4 mr-1" />
+                  {t('map.offers', 'Offers')}
+                </div>
+              </button>
             </div>
             
             {/* Tab Content */}
@@ -1817,7 +1871,7 @@ const response = await fetch(
                     <div className="relative">
                       <input
                         type="text"
-                        placeholder={t('map.search.placesPlaceholder', 'Search placejs...')}
+                        placeholder={t('map.search.placesPlaceholder', 'Search places...')}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full pl-10 pr-4 py-2 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#22c55e]"
@@ -2625,11 +2679,17 @@ const response = await fetch(
                       )}
                     </div>
                   )}
+
+              {activeSidebarTab === 'offers' && (
+                  <div className="p-4">
+                    <OffersList />
+                  </div>
+                )}  
                   
-                 {/* Turn-by-turn Directions */}
-{routeInfo && routeInfo.steps && routeInfo.steps.length > 0 && (
-  <TurnByTurnNavigation steps={routeInfo.steps} map={map} language={language} />
-)}
+              {/* Turn-by-turn Directions */}
+              {routeInfo && routeInfo.steps && routeInfo.steps.length > 0 && (
+                <TurnByTurnNavigation steps={routeInfo.steps} map={map} language={language} />
+              )}
                 </div>
               )}
             </div>
@@ -2727,6 +2787,15 @@ const response = await fetch(
                 <div className="flex items-center justify-center">
                   <Route className="h-4 w-4 mr-1" />
                   {t('map.planner.name', 'Planner')}
+                </div>
+              </button>
+              <button 
+                className={`flex-1 py-3 font-medium text-sm ${activeSidebarTab === 'offers' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                onClick={() => setActiveSidebarTab('offers')}
+              >
+                <div className="flex items-center justify-center">
+                  <Bike className="h-4 w-4 mr-1" />
+                  {t('map.offers', 'Offers')}
                 </div>
               </button>
             </div>
@@ -2931,6 +3000,13 @@ const response = await fetch(
               )}
             </div>
           )}
+
+          {activeSidebarTab === 'offers' && (
+            <div className="p-4">
+              <OffersList />
+            </div>
+          )}
+
         </div>
       )}
       
