@@ -10,6 +10,7 @@ const OfferSchema = new mongoose.Schema({
       it: { type: String }
     },
     price: Number,
+    image: { type: String },
     qrCode: { type: String, unique: true },
     partnerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     successFee: Number,
