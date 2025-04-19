@@ -67,7 +67,9 @@
   "map": {
     "search": {
       "placesPlaceholder": "Cerca luoghi...",
-      "routesPlaceholder": "Cerca percorsi..."
+      "routesPlaceholder": "Cerca percorsi...",
+      "offersPlaceholder": "Cerca offerte..."
+
     },
     "legend": "Legenda",
     "pointsOfInterest": "Luoghi",

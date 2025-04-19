@@ -118,6 +118,7 @@ const IntegratedMap = ({ initialRouteId, initialPoiId, initialMode, currentLangu
   // Offers
   const [offers, setOffers] = useState([]);
   const [selectedOffer, setSelectedOffer] = useState(null);
+  const [offerSearchQuery, setOfferSearchQuery] = useState('');
 
   // Route planning
   const [isRoutingPanelOpen, setIsRoutingPanelOpen] = useState(false);
@@ -731,6 +732,21 @@ const marker = new mapboxgl.Marker({
       return matchesSearch && matchesDifficulty && matchesRoadType;
     });
   };
+
+  // Filter offers based on search and filters
+  const filterOffers = () => {
+    if (!offers.length) return [];
+  
+    return offers.filter((offer) => {
+      const search = offerSearchQuery.toLowerCase();
+      return (
+        !offerSearchQuery ||
+        offer.name?.[language]?.toLowerCase().includes(search) ||
+        offer.description?.[language]?.toLowerCase().includes(search)
+      );
+    });
+  };
+  
   
   // Function to fetch and display a GPX track
   const fetchAndDisplayGpx = async (routeId) => {
@@ -1623,6 +1639,9 @@ const response = await fetch(
   
   // Toggle between map view and list view on mobile
   const toggleMapListView = () => {
+    console.log("Clicked map/list switch");
+    // Show POIs in list
+    setActiveSidebarTab('pois');
     setMapListView(mapListView === 'map' ? 'list' : 'map');
     // Always show sidebar in list view, hide in map view on mobile
     if (isMobileView) {
@@ -2684,9 +2703,10 @@ const response = await fetch(
                     </div>
                   )}
 
+              {/* Offers Tab */}
               {activeSidebarTab === 'offers' && (
                   <div className="p-4">
-                    <OffersList />
+                    <OffersList searchQuery={offerSearchQuery} />
                   </div>
                 )}  
                   
@@ -2744,21 +2764,34 @@ const response = await fetch(
           {activeSidebarTab !== 'profile' && (
             <div className="p-4">
               <div className="relative">
-                <input
-                  type="text"
-                  placeholder={activeSidebarTab === 'pois' ? 
-                    t('map.search.placesPlaceholder', "Search places...") : 
-                    t('map.search.routesPlaceholder', "Search routes...")}
-                  value={activeSidebarTab === 'pois' ? searchQuery : bikeRouteSearchQuery}
-                  onChange={(e) => {
-                    if (activeSidebarTab === 'pois') {
-                      setSearchQuery(e.target.value);
-                    } else {
-                      setBikeRouteSearchQuery(e.target.value);
-                    }
-                  }}
-                  className="w-full pl-10 pr-4 py-3 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#22c55e]"
-                />
+              <input
+                type="text"
+                placeholder={
+                  activeSidebarTab === 'pois'
+                    ? t('map.search.placesPlaceholder', 'Search places...')
+                    : activeSidebarTab === 'routes'
+                    ? t('map.search.routesPlaceholder', 'Search routes...')
+                    : t('map.search.offersPlaceholder', 'Search offers...')
+                }
+                value={
+                  activeSidebarTab === 'pois'
+                    ? searchQuery
+                    : activeSidebarTab === 'routes'
+                    ? bikeRouteSearchQuery
+                    : offerSearchQuery
+                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (activeSidebarTab === 'pois') {
+                    setSearchQuery(value);
+                  } else if (activeSidebarTab === 'routes') {
+                    setBikeRouteSearchQuery(value);
+                  } else if (activeSidebarTab === 'offers') {
+                    setOfferSearchQuery(value);
+                  }
+                }}
+                className="w-full pl-10 pr-4 py-3 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#22c55e]"
+              />
                 <Search className="absolute left-3 top-3 h-5 w-5 text-[#6b7280]" />
               </div>
               
@@ -2800,7 +2833,7 @@ const response = await fetch(
                   onClick={() => setActiveSidebarTab('offers')}
                 >
                   <div className="flex items-center justify-center">
-                    <Bike className="h-4 w-4 mr-1" />
+                    <BadgePercent className="h-4 w-4 mr-1" />
                     {t('map.offers', 'Offers')}
                   </div>
                 </button>
@@ -2879,9 +2912,9 @@ const response = await fetch(
               {filterPois().length === 0 && (
                 <div className="p-8 text-center text-[#6b7280]">
                   {searchQuery ? (
-                    <p>{t('map.noPlacesFound', 'No places found matching')}: "{searchQuery}"</p>
+                    <p>{t('map.poi.noResults', 'No places found matching')}: "{searchQuery}"</p>
                   ) : (
-                    <p>{t('map.noPointsOfInterest', 'No points of interest available')}</p>
+                    <p>{t('map.poi.noPlaces', 'No points of interest available')}</p>
                   )}
                 </div>
               )}
@@ -2943,9 +2976,9 @@ const response = await fetch(
               {filterBikeRoutes().length === 0 && (
                 <div className="p-8 text-center text-[#6b7280]">
                   {bikeRouteSearchQuery ? (
-                    <p>{t('map.noRoutesFound', 'No routes found matching')}: "{bikeRouteSearchQuery}"</p>
+                    <p>{t('map.routes.noResults', 'No routes found matching')}: "{bikeRouteSearchQuery}"</p>
                   ) : (
-                    <p>{t('map.noBikeRoutesAvailable', 'No bike routes available')}</p>
+                    <p>{t('map.routes.noResults', 'No bike routes available')}</p>
                   )}
                 </div>
               )}
@@ -3021,7 +3054,7 @@ const response = await fetch(
           {/* 🔐 Offers tab view */}
           {activeSidebarTab === 'offers' && (
             <div className="p-4">
-              <OffersList />
+              <OffersList searchQuery={offerSearchQuery} />
             </div>
           )}
 

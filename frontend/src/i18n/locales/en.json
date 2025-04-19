@@ -68,7 +68,8 @@
 "map": {
     "search": {
       "placesPlaceholder": "Search places...",
-      "routesPlaceholder": "Search routes..."
+      "routesPlaceholder": "Search routes...",
+      "offersPlaceholder": "Search offers..."
     },
     "legend": "Legend",
     "pointsOfInterest": "Places",
