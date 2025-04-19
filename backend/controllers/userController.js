@@ -1,4 +1,4 @@
-// controllers/authController.js - Enhanced implementation
+// controllers/userController.js - Enhanced implementation
 
 const User = require('../models/User');
 const Profile = require('../models/Profile');
@@ -10,6 +10,7 @@ const bcrypt = require('bcryptjs');
  * @route POST /api/auth/register
  * @access Public
  */
+/* ALREADY IN authController.js
 const register = async (req, res) => {
   try {
     const { 
@@ -177,11 +178,16 @@ const register = async (req, res) => {
   }
 };
 
+*/
+
 /**
  * Login a user
  * @route POST /api/auth/login
  * @access Public
  */
+
+/* ALREADY IN authController.js
+
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -251,11 +257,16 @@ const login = async (req, res) => {
   }
 };
 
+*/
+
 /**
  * Get current user profile
  * @route GET /api/auth/me
  * @access Private
  */
+
+/* ALREADY IN authController.js
+
 const getCurrentUser = async (req, res) => {
   try {
     const userId = req.user.userId;
@@ -291,72 +302,89 @@ const getCurrentUser = async (req, res) => {
   }
 };
 
+*/
+
+
 /**
- * Update user password
- * @route PATCH /api/auth/password
- * @access Private
+ * Get profile info (without password)
  */
-const updatePassword = async (req, res) => {
+const getUserProfile = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const { currentPassword, newPassword } = req.body;
-    
-    // Validate input
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({
-        success: false,
-        message: 'Please provide current and new password',
-        missingFields: !currentPassword ? ['currentPassword'] : ['newPassword']
-      });
-    }
-    
-    // Validate new password strength
-    if (newPassword.length < 6) {
-      return res.status(400).json({
-        success: false,
-        message: 'New password must be at least 6 characters long'
-      });
-    }
-    
-    // Find user
-    const user = await User.findById(userId);
+    const user = await User.findById(userId).select('-password');
+
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
+      return res.status(404).json({ success: false, message: 'User not found' });
     }
-    
-    // Verify current password
-    const isPasswordCorrect = await user.comparePassword(currentPassword);
-    if (!isPasswordCorrect) {
-      return res.status(401).json({
-        success: false,
-        message: 'Current password is incorrect'
-      });
+
+    res.json({ success: true, user });
+  } catch (err) {
+    console.error('Error fetching user profile:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+/**
+ * Update profile fields
+ */
+const updateUserProfile = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { firstName, lastName, email, phoneNumber } = req.body;
+
+    const updateData = {};
+    if (firstName !== undefined) updateData.firstName = firstName;
+    if (lastName !== undefined) updateData.lastName = lastName;
+    if (email !== undefined) updateData.email = email;
+    if (phoneNumber !== undefined) updateData.phoneNumber = phoneNumber;
+
+    const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
+      new: true,
+      runValidators: true
+    }).select('-password');
+
+    if (!updatedUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
     }
-    
-    // Update password
-    user.password = newPassword;
-    await user.save();
-    
-    res.status(200).json({
-      success: true,
-      message: 'Password updated successfully'
-    });
-  } catch (error) {
-    console.error('Update password error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to update password',
-      error: error.message
-    });
+
+    res.json({ success: true, user: updatedUser });
+  } catch (err) {
+    console.error('Error updating profile:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+/**
+ * Update user interests
+ */
+const updateUserInterests = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { interests } = req.body;
+
+    if (!interests || !Array.isArray(interests) || interests.length === 0) {
+      return res.status(400).json({ success: false, message: 'At least one interest is required' });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { interests },
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    if (!updatedUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    res.json({ success: true, user: updatedUser });
+  } catch (err) {
+    console.error('Error updating interests:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
 module.exports = {
-  register,
-  login,
-  getCurrentUser,
-  updatePassword
+  getUserProfile,
+  updateUserProfile,
+  updateUserInterests
 };

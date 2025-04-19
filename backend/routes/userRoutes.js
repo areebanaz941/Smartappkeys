@@ -16,11 +16,12 @@ const {
 } = require('../controllers/userController');
 
 // Get user profile
-router.get('/profile', getUserProfile);
+router.get('/profile', authenticateUser, getUserProfile);
 
 // Update user profile (common fields)
 router.patch(
   '/profile',
+  authenticateUser,
   [
     body('firstName').optional().trim().notEmpty().withMessage('First name cannot be empty'),
     body('lastName').optional().trim().notEmpty().withMessage('Last name cannot be empty'),
@@ -34,6 +35,7 @@ router.patch(
 // Update user interests
 router.patch(
   '/interests',
+  authenticateUser,
   [
     body('interests').isArray({ min: 1 }).withMessage('At least one interest is required')
   ],

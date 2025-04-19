@@ -198,8 +198,73 @@ const getCurrentUser = async (req, res) => {
   }
 };
 
+/**
+ * Update user password
+ * @route PATCH /api/auth/password
+ * @access Private
+ */
+const updatePassword = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { currentPassword, newPassword } = req.body;
+    
+    // Validate input
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide current and new password',
+        missingFields: !currentPassword ? ['currentPassword'] : ['newPassword']
+      });
+    }
+    
+    // Validate new password strength
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'New password must be at least 6 characters long'
+      });
+    }
+    
+    // Find user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+    
+    // Verify current password
+    const isPasswordCorrect = await user.comparePassword(currentPassword);
+    if (!isPasswordCorrect) {
+      return res.status(401).json({
+        success: false,
+        message: 'Current password is incorrect'
+      });
+    }
+    
+    // Update password
+    user.password = newPassword;
+    await user.save();
+    
+    res.status(200).json({
+      success: true,
+      message: 'Password updated successfully'
+    });
+  } catch (error) {
+    console.error('Update password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update password',
+      error: error.message
+    });
+  }
+};
+
+
 module.exports = {
   register,
   login,
-  getCurrentUser
+  getCurrentUser,
+  updatePassword
 };

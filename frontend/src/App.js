@@ -29,7 +29,6 @@ import ProtectedRoute from './pages/ProtectedRoute';
 import BikeBookingID from './pages/BikeBusiness/BikeBookingForm_ID';
 import BikeBookingSUV from './pages/BikeBusiness/BikeBookingForm_SUV';
 import AdminLoginPage from './pages/AdminLoginPage';
-import UserProfile from './pages/UserProfile';
 
 function App() {
   return (
@@ -85,8 +84,6 @@ function App() {
           <Route path="/explorer" element={<IntegratedMapPage />} />
           <Route path="/explorer/route/:id" element={<IntegratedMapPage />} />
           <Route path="/explorer/poi/:id" element={<IntegratedMapPage />} />
-
-          <Route path="/user-profile" element={<UserProfile />} />
 
         </Route>
       </Routes>

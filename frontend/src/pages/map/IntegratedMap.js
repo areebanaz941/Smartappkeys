@@ -18,6 +18,9 @@ import {
   EyeOff,
   Eye,
   Filter,
+  User,
+  BadgePercent,
+  Wand,
   Ticket,
   Compass,
   ChevronDown,
@@ -41,6 +44,7 @@ import { getUserId } from '../../lib/auth';
 
 // Get components
 import OffersList from '../../components/OffersList';
+import UserProfile from '../../components/UserProfile';
 
 const userId = getUserId();
 
@@ -2736,72 +2740,83 @@ const response = await fetch(
       {/* Mobile list view - shows only when in list mode */}
       {isMobileView && mapListView === 'list' && (
         <div className="flex-1 overflow-auto">
-          <div className="p-4">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder={activeSidebarTab === 'pois' ? 
-                  t('map.search.placesPlaceholder', "Search places...") : 
-                  t('map.search.routesPlaceholder', "Search routes...")}
-                value={activeSidebarTab === 'pois' ? searchQuery : bikeRouteSearchQuery}
-                onChange={(e) => {
-                  if (activeSidebarTab === 'pois') {
-                    setSearchQuery(e.target.value);
-                  } else {
-                    setBikeRouteSearchQuery(e.target.value);
-                  }
-                }}
-                className="w-full pl-10 pr-4 py-3 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#22c55e]"
-              />
-              <Search className="absolute left-3 top-3 h-5 w-5 text-[#6b7280]" />
+          {/* Do not show tabs when profile is selected */}
+          {activeSidebarTab !== 'profile' && (
+            <div className="p-4">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder={activeSidebarTab === 'pois' ? 
+                    t('map.search.placesPlaceholder', "Search places...") : 
+                    t('map.search.routesPlaceholder', "Search routes...")}
+                  value={activeSidebarTab === 'pois' ? searchQuery : bikeRouteSearchQuery}
+                  onChange={(e) => {
+                    if (activeSidebarTab === 'pois') {
+                      setSearchQuery(e.target.value);
+                    } else {
+                      setBikeRouteSearchQuery(e.target.value);
+                    }
+                  }}
+                  className="w-full pl-10 pr-4 py-3 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#22c55e]"
+                />
+                <Search className="absolute left-3 top-3 h-5 w-5 text-[#6b7280]" />
+              </div>
+              
+              {/* Tabs for mobile list view */}
+              <div className="flex border-b mt-4">
+                <button 
+                  className={`flex-1 py-3 font-medium text-sm ${activeSidebarTab === 'pois' ? 'text-green-600 border-b-2 border-green-600' : 'text-gray-500 hover:text-gray-700'}`}
+                  onClick={() => setActiveSidebarTab('pois')}
+                >
+                  <div className="flex items-center justify-center">
+                    <MapPin className="h-4 w-4 mr-1" />{t('map.pointsOfInterest', 'POIs')}
+                  </div>
+                </button>
+                <button 
+                  className={`flex-1 py-3 font-medium text-sm ${activeSidebarTab === 'routes' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                  onClick={() => setActiveSidebarTab('routes')}
+                >
+                  <div className="flex items-center justify-center">
+                    <Bike className="h-4 w-4 mr-1" />
+                    {t('map.bikeRoutes', 'Bike Routes')}
+                  </div>
+                </button>
+                <button 
+                  className={`flex-1 py-3 font-medium text-sm ${activeSidebarTab === 'planner' ? 'text-amber-600 border-b-2 border-amber-600' : 'text-gray-500 hover:text-gray-700'}`}
+                  onClick={() => {
+                    setActiveSidebarTab('planner');
+                    if (!isRoutingPanelOpen) {
+                      startRoutePlanning();
+                    }
+                  }}
+                >
+                  <div className="flex items-center justify-center">
+                    <Route className="h-4 w-4 mr-1" />
+                    {t('map.planner.name', 'Planner')}
+                  </div>
+                </button>
+                <button 
+                  className={`flex-1 py-3 font-medium text-sm ${activeSidebarTab === 'offers' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                  onClick={() => setActiveSidebarTab('offers')}
+                >
+                  <div className="flex items-center justify-center">
+                    <Bike className="h-4 w-4 mr-1" />
+                    {t('map.offers', 'Offers')}
+                  </div>
+                </button>
+              </div>
             </div>
-            
-            {/* Tabs for mobile list view */}
-            <div className="flex border-b mt-4">
-              <button 
-                className={`flex-1 py-3 font-medium text-sm ${activeSidebarTab === 'pois' ? 'text-green-600 border-b-2 border-green-600' : 'text-gray-500 hover:text-gray-700'}`}
-                onClick={() => setActiveSidebarTab('pois')}
-              >
-                <div className="flex items-center justify-center">
-                  <MapPin className="h-4 w-4 mr-1" />{t('map.pointsOfInterest', 'POIs')}
-                </div>
-              </button>
-              <button 
-                className={`flex-1 py-3 font-medium text-sm ${activeSidebarTab === 'routes' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-                onClick={() => setActiveSidebarTab('routes')}
-              >
-                <div className="flex items-center justify-center">
-                  <Bike className="h-4 w-4 mr-1" />
-                  {t('map.bikeRoutes', 'Bike Routes')}
-                </div>
-              </button>
-              <button 
-                className={`flex-1 py-3 font-medium text-sm ${activeSidebarTab === 'planner' ? 'text-amber-600 border-b-2 border-amber-600' : 'text-gray-500 hover:text-gray-700'}`}
-                onClick={() => {
-                  setActiveSidebarTab('planner');
-                  if (!isRoutingPanelOpen) {
-                    startRoutePlanning();
-                  }
-                }}
-              >
-                <div className="flex items-center justify-center">
-                  <Route className="h-4 w-4 mr-1" />
-                  {t('map.planner.name', 'Planner')}
-                </div>
-              </button>
-              <button 
-                className={`flex-1 py-3 font-medium text-sm ${activeSidebarTab === 'offers' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-                onClick={() => setActiveSidebarTab('offers')}
-              >
-                <div className="flex items-center justify-center">
-                  <Bike className="h-4 w-4 mr-1" />
-                  {t('map.offers', 'Offers')}
-                </div>
-              </button>
-            </div>
-          </div>
+          )}
           
           {/* Show content based on active tab */}
+          {/* 🔐 Profile tab view */}
+          {activeSidebarTab === 'profile' && (
+            <div className="p-4">
+              <UserProfile />
+            </div>
+          )}
+
+          {/* 🔐 Places tab view */}
           {activeSidebarTab === 'pois' && (
             <div className="divide-y">
               {filterPois().map(poi => (
@@ -2873,6 +2888,7 @@ const response = await fetch(
             </div>
           )}
           
+          {/* 🔐 Routes tab view */}
           {activeSidebarTab === 'routes' && (
             <div className="divide-y">
               {filterBikeRoutes().map(route => (
@@ -2936,6 +2952,7 @@ const response = await fetch(
             </div>
           )}
           
+          {/* 🔐 Planner tab view */}
           {activeSidebarTab === 'planner' && (
             <div className="p-4">
               <div className="flex space-x-2 mb-3">
@@ -3001,6 +3018,7 @@ const response = await fetch(
             </div>
           )}
 
+          {/* 🔐 Offers tab view */}
           {activeSidebarTab === 'offers' && (
             <div className="p-4">
               <OffersList />
@@ -3013,6 +3031,8 @@ const response = await fetch(
       {/* Mobile Bottom Navigation Bar */}
       {isMobileView && (
         <div className="fixed bottom-0 left-0 right-0 h-16 bg-white shadow-lg z-30 flex items-center justify-around border-t">
+          {
+          /*
           <button
             className={`flex flex-col items-center justify-center w-1/4 p-1 ${
               false ? 'text-green-600' : 'text-gray-500'
@@ -3024,19 +3044,9 @@ const response = await fetch(
             <Home className="h-5 w-5" />
             <span className="text-xs mt-1">{t('map.mobileNav.shop', 'Shop')}</span>
           </button>
-          <button
-            className={`flex flex-col items-center justify-center w-1/4 p-1 ${
-              activeSidebarTab === 'pois' ? 'text-green-600' : 'text-gray-500'
-            }`}
-            onClick={() => {
-              setActiveSidebarTab('pois');
-              setMapListView('list');
-              setIsSidebarOpen(true);
-            }}
-          >
-            <MapPin className="h-5 w-5" />
-            <span className="text-xs mt-1">{t('map.mobileNav.experiences', 'Experiences')}</span>
-          </button>
+          */}
+          
+          {/* ICON 1 - ROUTES */}
           <button
             className={`flex flex-col items-center justify-center w-1/4 p-1 ${
               activeSidebarTab === 'routes' ? 'text-blue-600' : 'text-gray-500'
@@ -3050,6 +3060,50 @@ const response = await fetch(
             <Bike className="h-5 w-5" />
             <span className="text-xs mt-1">{t('map.mobileNav.routes', 'Routes')}</span>
           </button>
+          {/* ICON 2 - OFFERS */}
+          <button
+            className={`flex flex-col items-center justify-center w-1/4 p-1 ${
+              activeSidebarTab === 'offers' ? 'text-blue-600' : 'text-gray-500'
+            }`}
+            onClick={() => {
+              setActiveSidebarTab('offers');
+              setMapListView('list');
+              setIsSidebarOpen(true);
+            }}
+          >
+            <BadgePercent className="h-5 w-5 " />
+            <span className="text-xs mt-1">{t('map.mobileNav.offers', 'Experiences')}</span>
+          </button>
+          {/* ICON 3 - EXPERIENCES */}
+          <button
+            className={`flex flex-col items-center justify-center w-1/4 p-1 ${
+              activeSidebarTab === 'pois' ? 'text-blue-600' : 'text-gray-500'
+            }`}
+            onClick={() => {
+              setActiveSidebarTab('pois');
+              setMapListView('list');
+              setIsSidebarOpen(true);
+            }}
+          >
+            <Wand className="h-5 w-5 " />
+            <span className="text-xs mt-1">{t('map.mobileNav.experiences', 'Experiences')}</span>
+          </button>
+          {/* ICON 4 - PROFILE */}
+          <button
+            className={`flex flex-col items-center justify-center w-1/4 p-1 ${
+              activeSidebarTab === 'profile' ? 'text-blue-600' : 'text-gray-500'
+            }`}
+            onClick={() => {
+              setActiveSidebarTab('profile');
+              setMapListView('list');
+              setIsSidebarOpen(true);
+            }}
+          >
+            <User className="w-5 h-5 " />
+            <span className="text-xs mt-1">{t('map.mobileNav.profile', 'Profile')}</span>
+          </button>
+
+          {/*
           <button
             className={`flex flex-col items-center justify-center w-1/4 p-1 ${
               showPois ? 'text-green-600' : 'text-gray-500'
@@ -3064,6 +3118,7 @@ const response = await fetch(
             <Layers className="h-5 w-5" />
             <span className="text-xs mt-1">{t('map.mobileNav.mapList', 'Map/List')}</span>
           </button>
+          */}
         </div>
       )}
 
